@@ -4,14 +4,13 @@ import { queryClient } from '../src/lib/queryClient';
 import { useFonts, Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/src/store/useAuthStore';
-import { View, ActivityIndicator } from 'react-native';
-import Colors from '@/src/constants/Colors';
 import '../global.css'
 import { usePushNotifications } from '@/src/hooks/usePushNotifications';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 
 export default function RootLayout() {
-  usePushNotifications();
+  // usePushNotifications();
   const router = useRouter();
   const { _hasHydrated, isAuthenticated } = useAuthStore();
   const [fontsLoaded, fontError] = useFonts({
@@ -34,7 +33,6 @@ export default function RootLayout() {
       router.replace('/login');
     }
 
-    // Ocultamos la pantalla de splash
     SplashScreen.hideAsync();
   }, [fontsLoaded, fontError, _hasHydrated, isAuthenticated, router]);
 
@@ -42,10 +40,12 @@ export default function RootLayout() {
   if (!fontsLoaded || fontError || !_hasHydrated) {
     return null;
   }
-  
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </QueryClientProvider>
+    <ActionSheetProvider>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </QueryClientProvider>
+    </ActionSheetProvider>
   );
 }

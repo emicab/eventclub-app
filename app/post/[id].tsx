@@ -41,12 +41,14 @@ import {
       return data;
   };
   const toggleCommentLike = async (commentId: string) => {
-    await apiClient.post(`/api/comments/${commentId}/like`);
+    const {data} = await apiClient.post(`/api/comments/${commentId}/like`);
+    return data;
   };
   
   // --- Componente para cada Comentario ---
   const CommentItem = ({ item }: { item: Comment }) => {
     const queryClient = useQueryClient();
+    
     const { mutate: handleLike } = useMutation({
       mutationFn: () => toggleCommentLike(item.id),
       onSuccess: () => {

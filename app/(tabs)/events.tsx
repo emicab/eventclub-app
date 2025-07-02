@@ -1,61 +1,105 @@
-import EventCard, { Event } from '@/src/components/shared/EventCard';
-import { SafeAreaView, ScrollView, Text, View } from 'react-native';
+import CalendarModal from '@/src/components/events/CalendarModal';
+import EventListItem from '@/src/components/events/EventListItem';
+import Colors from '@/src/constants/Colors';
+import apiClient from '@/src/lib/axios';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { Event, UserProfile } from '@/src/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 
-// Usamos el mismo array de ejemplo, pero en una implementación real
-// podrías hacer una llamada a la API diferente aquí.
-const mockEvents: Event[] = [
-    {
-    id: '1',
-    title: 'Bresh - La Fiesta Más Linda',
-    location: 'Estadio GEBA, Buenos Aires',
-    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1974&auto=format&fit=crop',
-  },
-  {
-    id: '2',
-    title: 'Hernán Cattáneo en Forja',
-    location: 'Forja, Córdoba',
-    imageUrl: 'https://images.unsplash.com/photo-1582732293420-c89514696811?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: '3',
-    title: 'Noche de Electrónica',
-    location: 'Mute, Mar del Plata',
-    imageUrl: 'https://images.unsplash.com/photo-1561489396-888724a1543d?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: '4',
-    title: 'Festival de Folklore',
-    location: 'Cosquín, Córdoba',
-    imageUrl: 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?q=80&w=1954&auto=format&fit=crop'
-  }
-];
+const fetchEvents = async (date?: string): Promise<Event[]> => {
+  const dateFilter = date ? `?date=${date}` : '';
+  const { data } = await apiClient.get(`/api/events${dateFilter}`);
+  return data;
+};
+
+// Función para agrupar eventos por día
+const groupEventsByDay = (events: Event[]) => {
+  return events.reduce((acc, event) => {
+    const eventDate = new Date(event.date).toLocaleDateString('es-ES', { weekday: 'long', month: 'long', day: 'numeric' });
+    if (!acc[eventDate]) {
+      acc[eventDate] = [];
+    }
+    acc[eventDate].push(event);
+    return acc;
+  }, {} as Record<string, Event[]>);
+};
+
+const fetchMyProfile = async (): Promise<UserProfile> => {
+  const { data } = await apiClient.get('/api/users/me');
+  return data;
+};
 
 export default function EventsScreen() {
-  return (
-    <SafeAreaView className="flex-1 mt-safe bg-background pt-6">
-      <ScrollView>
-        <View className="p-6">
-          <Text
-            className="text-primary text-3xl"
-            style={{ fontFamily: 'Inter_700Bold' }}
-          >
-            Agenda de Eventos
-          </Text>
-          <Text
-            className="text-secondary mt-1 mb-8"
-            style={{ fontFamily: 'Inter_400Regular' }}
-          >
-            Descubrí tu próxima noche.
-          </Text>
+  const [selectedDate, setSelectedDate] = useState<string | undefined>();
+  const [modalVisible, setModalVisible] = useState(false);
+  const router = useRouter();
+  
+  const { data: currentUser } = useQuery({
+      queryKey: ['myProfile'],
+      queryFn: fetchMyProfile,
+    });
 
-          {/* Mapeamos el array de eventos y renderizamos una EventCard por cada uno */}
-          <View className="space-y-6">
-            {mockEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </View>
+
+  const { data: events, isLoading } = useQuery({
+    queryKey: ['events', selectedDate],
+    queryFn: () => fetchEvents(selectedDate),
+    refetchOnWindowFocus: true
+  });
+
+  const groupedEvents = events ? groupEventsByDay(events) : {};
+  const sections = Object.keys(groupedEvents).map(date => ({
+    title: date,
+    data: groupedEvents[date],
+  }));
+
+  return (
+    <SafeAreaView className="flex-1 bg-background pt-10 mt-safe">
+      <View className='px-6 mb-4 flex-row justify-between items-center'>
+        <View>
+          <Text className="text-primary text-3xl" style={{ fontFamily: 'Inter_700Bold' }}>Eventos</Text>
+          <Text className="text-secondary mt-1" style={{ fontFamily: 'Inter_400Regular' }}>subtitulo para los eventos</Text>
         </View>
-      </ScrollView>
+        <TouchableOpacity onPress={() => setModalVisible(true)} className="mr-4">
+          <Ionicons name="calendar-outline" size={24} color={Colors.accent} />
+        </TouchableOpacity>
+      </View>
+
+      <CalendarModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSelectDate={setSelectedDate}
+      />
+
+      {isLoading ? (
+        <ActivityIndicator size="large" color={Colors.accent} className="mt-8" />
+      ) : (
+        <FlatList
+          data={sections}
+          keyExtractor={(item) => item.title}
+          renderItem={({ item }) => (
+            <View className="px-6 mt-6">
+              <Text className="text-primary text-xl capitalize" style={{ fontFamily: 'Inter_700Bold' }}>{item.title}</Text>
+              <View className="mt-4">
+                {item.data.map(event => <EventListItem key={event.id} event={event} />)}
+              </View>
+            </View>
+          )}
+          ListEmptyComponent={<Text className="text-secondary text-center mt-16">No hay eventos para esta fecha.</Text>}
+        />
+      )}
+      {/* --- BOTÓN FLOTANTE PARA ADMINS --- */}
+      {currentUser?.role === 'ADMIN' && (
+        <TouchableOpacity
+          onPress={() => router.push('/event/create')}
+          className="absolute bottom-32 right-6 bg-accent w-16 h-16 rounded-full justify-center items-center shadow-lg shadow-accent/40"
+        >
+          <Ionicons name="add" size={32} color={Colors.background} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }

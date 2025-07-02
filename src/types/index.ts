@@ -1,5 +1,13 @@
 // Tipos relacionados con la autenticación
 
+import { Float } from "react-native/Libraries/Types/CodegenTypes";
+
+declare module '@env' {
+  export const API_URL: string;
+  export const API_KEY: string;
+}
+
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -16,6 +24,7 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
+  isVerified: boolean;
   points: number;
   role: 'USER' | 'ADMIN' | 'PRODUCER';
   profile?: {
@@ -49,4 +58,57 @@ export interface Benefit {
   isExclusive: boolean;
   pointCost?: number;
   
+}
+
+export type Channel = {
+  id: string;
+  name: string;
+  slug: string;
+  isPrivate: boolean; // <-- Nuevo campo
+};
+
+export type UserInfo = {
+  id: any;
+  isVerified: any;
+  firstName: string;
+  lastName: string;
+
+  profile: {
+    avatarUrl?: string;
+  };
+};
+
+export type Post = {
+  likedByCurrentUser: any;
+  lastComment: any;
+  id: string;
+  author: UserInfo;
+  content: string;
+  imageUrls?: string[];
+  _count: {
+    likes: number;
+    comments: number;
+  };
+  createdAt: string; // Recibimos la fecha como un string ISO
+};
+
+export type Event = {
+  place: string;
+  longitude: number;
+  latitude: number;
+  organizer: any;
+  address: string;
+  description: string;
+  tickets: any;
+  name: string;
+  date: string | number | Date;
+  id: string;
+  title: string;
+  company: {
+    logoUrl: any;
+    name: string;
+  }
+  city: string;
+  imageUrls: string[];
+  price: Float;
 }

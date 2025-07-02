@@ -58,7 +58,10 @@ export default function BenefitsScreen() {
     queryKey: ['myProfile'],
     queryFn: fetchMyProfile,
     refetchOnWindowFocus: true,
+    
   });
+
+  console.log('user ::', user)
 
   const renderContent = () => {
     if (isLoading) {
@@ -101,9 +104,11 @@ export default function BenefitsScreen() {
     );
   };
 
+  
+
   return (
     // Reemplazamos "my-safe" por un padding top estándar
-    <SafeAreaView className="flex-1 mt-safe bg-background pt-8">
+    <SafeAreaView className="flex-1 mt-safe bg-background pt-10">
       <View className="px-6">
         <View className='flex-row justify-between items-start mb-6'>
           <View>

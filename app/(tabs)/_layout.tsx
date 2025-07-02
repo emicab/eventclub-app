@@ -20,9 +20,12 @@ export default function TabLayout() {
         tabBarBackground: () => (
           // Este es el truco para que la tab bar tenga el efecto de vidrio
           <BlurView
-            intensity={90}
+            intensity={20}
             tint="dark"
-            style={{ flex: 1 }}
+            style={{ 
+              flex: 1, 
+            }}
+            //experimentalBlurMethod='dimezisBlurView'
           />
         )
       }}

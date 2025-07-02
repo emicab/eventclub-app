@@ -8,9 +8,13 @@ import Colors from '@/src/constants/Colors';
 import apiClient from '@/src/lib/axios';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import VerifyCheckIcon from '../ui/VerifyCheckIcon';
+import { useState } from 'react';
+import ImageView from "react-native-image-viewing";
 
 // Definimos los tipos para un post, coincidiendo con tu API
 export type UserInfo = {
+  isVerified: any;
   firstName: string;
   lastName: string;
   profile: {
@@ -24,7 +28,7 @@ export type Post = {
   id: string;
   author: UserInfo;
   content: string;
-  imageUrl?: string;
+  imageUrls?: string;
   _count: {
     likes: number;
     comments: number;
@@ -47,9 +51,20 @@ const toggleLike = async (postId: string) => {
   return data;
 };
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCardComment({ post }: PostCardProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [visible, setIsVisible] = useState(false);
+
+  const imagesForViewer = post.imageUrls?.map(url => ({ uri: url })) || [];
+
+  const openImageViewer = (index: number) => {
+    console.log(`Abriendo visor para la imagen en el índice: ${index}`);
+    setCurrentImageIndex(index);
+    setIsVisible(true);
+  };
 
   const authorName = `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim();
   const avatarUrl = post.author.profile?.avatarUrl || 'https://placehold.co/100';
@@ -79,12 +94,21 @@ export default function PostCard({ post }: PostCardProps) {
           <View className="flex-row items-center">
             <Image
               source={{ uri: avatarUrl }}
-              className="w-10 h-10 rounded-full"
+              className="w-10 h-10 rounded-full mr-2"
             />
-            <View className="ml-3">
-              <Text className="text-primary" style={{ fontFamily: 'Inter_700Bold' }}>
-                {authorName}
-              </Text>
+            <View className="flex items-start ml-2">
+              <View className='flex-row justify-center'>
+                <Text className="text-primary mr-2" style={{ fontFamily: 'Inter_700Bold' }}>
+                  {authorName}
+                </Text>
+                <Text>
+                  {
+                    post.author?.isVerified && (
+                      <VerifyCheckIcon className="w-2 h-2 ml-2" color={Colors.accent} />
+                    )
+                  }
+                </Text>
+              </View>
               <Text className="text-secondary text-xs" style={{ fontFamily: 'Inter_400Regular' }}>
                 {/* 3. Usamos la nueva función para mostrar la fecha relativa */}
                 {formatRelativeTime(post.createdAt)}
@@ -101,12 +125,24 @@ export default function PostCard({ post }: PostCardProps) {
           {post.content}
         </Text>
 
-        {/* --- Imagen del Post (si existe) --- */}
-        {post.imageUrl && (
-          <Image
-            source={{ uri: post.imageUrl }}
-            className="w-full h-56 rounded-lg mb-3"
-          />
+        {/* --- Galería de Imágenes --- */}
+        {post.imageUrls && post.imageUrls.length > 0 && (
+          <View className="mt-3 mb-2 -mx-1 flex-row flex-wrap">
+            {post.imageUrls.slice(0, 4).map((url, index) => ( // Mostramos hasta 4 imágenes
+              <TouchableOpacity
+                key={index}
+                className="w-1/2 p-1 relative"
+                onPress={() => openImageViewer(index)}
+              >
+                <Image source={{ uri: url }} className="w-full aspect-square rounded-md" />
+                {index === 3 && post.imageUrls.length > 4 && (
+                  <View className="absolute inset-1 bg-black/60 rounded-md justify-center items-center">
+                    <Text className="text-white text-2xl font-bold">+{post.imageUrls.length - 4}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
 
         {/* --- Pie de Post (Likes, Comentarios y Acciones) --- */}
@@ -125,7 +161,16 @@ export default function PostCard({ post }: PostCardProps) {
             <Ionicons name="arrow-redo-outline" size={22} color={Colors.text.secondary} />
           </TouchableOpacity>
         </View>
-        
+
+        {/* Visor de Imágenes Modal */}
+        <ImageView
+          images={imagesForViewer}
+          imageIndex={currentImageIndex}
+          visible={visible}
+          onRequestClose={() => setIsVisible(false)}
+          
+        />
+
       </BlurView>
     </View>
   );
