@@ -7,7 +7,6 @@ import { LoginCredentials } from '../types'; // Suponiendo que tienes un archivo
 // 1. Separamos la lógica de la llamada a la API
 const loginUser = async (credentials: LoginCredentials) => {
   const { data } = await apiClient.post('/api/auth/login', credentials);
-  console.log(data)
   return data;
 };
 

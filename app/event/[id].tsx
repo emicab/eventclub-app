@@ -26,7 +26,6 @@ export default function EventDetailScreen() {
         enabled: !!eventId,
     });
 
-    console.log("Eventid:: ", event)
 
     const handleShare = async () => {
         try {
@@ -75,10 +74,10 @@ export default function EventDetailScreen() {
 
                 {/* --- Contenido del Evento --- */}
                 <View className="p-6">
-                    <Text className="text-primary text-3xl" style={{ fontFamily: 'Inter_700Bold' }}>{event.title}</Text>
+                    <Text className="text-primary text-3xl uppercase" style={{ fontFamily: 'Inter_700Bold' }}>{event.title}</Text>
                     <Text className="text-accent font-semibold text-lg mt-1 uppercase">{formattedDate}</Text>
-                    <Text className="text-secondary text-base mt-1">{event.place}</Text>
-                    <Text className="text-secondary text-lg mt-1">{event.address}, {event.city}</Text>
+                    <Text className="text-secondary text-lg font-semibold mt-1">{event.place}</Text>
+                    <Text className="text-secondary text-md mt-1">{event.address}, {event.city}</Text>
 
                     {/* --- Sección de Descripción --- */}
                     <View className="mt-2 pt-6 border-t border-glass-border">
@@ -106,15 +105,15 @@ export default function EventDetailScreen() {
                         </Text>
                         <View className='rounded-xl overflow-hidden'>
                             <MapView
-                                style={{ width: '100%', height: 140, borderRadius: 24 }}
-                                initialRegion={{
+                                style={{ width: '100%', height: 160, borderRadius: 24 }}
+                                region={{
                                     latitude: event.latitude,
                                     longitude: event.longitude,
-                                    latitudeDelta: 0.01,
-                                    longitudeDelta: 0.01,
+                                    latitudeDelta: 0.005,
+                                    longitudeDelta: 0.005,
                                 }}
                                 scrollEnabled={false}
-                                zoomEnabled={true}
+                                zoomEnabled={false}
                                 pitchEnabled={false}
                                 rotateEnabled={false}
                                 pointerEvents="none"
@@ -123,6 +122,7 @@ export default function EventDetailScreen() {
                                     coordinate={{ latitude: event.latitude, longitude: event.longitude }}
                                     title={event.title}
                                     description={event.address}
+                                    pinColor={Colors.accent}
                                 />
                             </MapView>
                         </View>
@@ -132,7 +132,7 @@ export default function EventDetailScreen() {
             </ScrollView>
 
             {/* --- Footer de Compra --- */}
-            <View className="absolute mb-safe bottom-0 left-0 right-0 p-4 bg-card border-t border-glass-border">
+            <View className="absolute mb-safe bottom-0 left-0 right-0 p-4 bg-background/95 backdrop:blur-sm border-t border-glass-border">
                 <View className="flex-row justify-between items-center">
                     <View>
                         <Text className="text-secondary text-sm">Desde</Text>

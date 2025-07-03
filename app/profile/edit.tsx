@@ -158,7 +158,7 @@ export default function EditProfileScreen() {
   // --- LÓGICA DE IMAGEN Y FECHA ---
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true, aspect: [1, 1], quality: 0.8,
     });
     if (!result.canceled) uploadNewAvatar(result.assets[0]);

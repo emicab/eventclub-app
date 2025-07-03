@@ -66,9 +66,7 @@ export default function BenefitDetailScreen() {
     
     refetchOnWindowFocus: true,
   });
-  console.log("benefitDeta:: ", benefitDetails)
-
-
+  
   const { mutate: generateToken, isPending: isGeneratingToken } = useMutation({
     mutationFn: () => generateTokenForBenefit(benefitId as string),
     onSuccess: (data) => setQrData(data),

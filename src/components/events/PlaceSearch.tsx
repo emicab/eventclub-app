@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 
-const GOOGLE_API_KEY = process.env.API_KEY;
+const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 
 export default function PlaceSearch({ onLocationSelected }: { onLocationSelected: (data: { name: string, lat: number, lng: number }) => void }) {
-  console.log(process.env.API_KEY)
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-
+    
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (query.length > 2) {
@@ -23,7 +22,7 @@ export default function PlaceSearch({ onLocationSelected }: { onLocationSelected
 
   const fetchSuggestions = async (input: string) => {
     try {
-      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_API_KEY}&language=es&components=country:ar`;
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_API_KEY}&language=es&types=establishment`;
       const res = await fetch(url);
       const json = await res.json();
       setSuggestions(json.predictions || []);
@@ -39,10 +38,12 @@ export default function PlaceSearch({ onLocationSelected }: { onLocationSelected
       const res = await fetch(url);
       const json = await res.json();
       const location = json.result.geometry.location;
-      console.log(location)
+
       onLocationSelected({ name, lat: location.lat, lng: location.lng });
       setSuggestions([]);
-      setQuery(name);
+       // Extraer el nombre sin la ciudad
+      setQuery(name.split(',')[0]);
+
     } catch (err) {
       console.error('Error al obtener detalles', err);
     } finally {
@@ -50,11 +51,11 @@ export default function PlaceSearch({ onLocationSelected }: { onLocationSelected
     }
   };
 
-  console.log(query)
 
   return (
     <View>
       <TextInput
+      className='mb-2'
         placeholder="Buscar lugar del evento"
         value={query}
         onChangeText={setQuery}
@@ -62,7 +63,6 @@ export default function PlaceSearch({ onLocationSelected }: { onLocationSelected
           backgroundColor: '#f3f3f3',
           padding: 12,
           borderRadius: 10,
-          marginBottom: 4,
         }}
       />
 
@@ -70,10 +70,11 @@ export default function PlaceSearch({ onLocationSelected }: { onLocationSelected
 
       {suggestions.map((item, index) => (
         <TouchableOpacity 
+            className='py-2 px-3 bg-primary rounded-md mb-2'
             key={item.place_id || index} 
             onPress={() => fetchCoordinates(item.place_id, item.description)} 
         >
-          <Text>{item.description}</Text>
+          <Text className='text-dark'>{item.description}</Text>
         </TouchableOpacity>
       ))}
 

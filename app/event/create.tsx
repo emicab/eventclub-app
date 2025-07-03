@@ -1,4 +1,3 @@
-// --- app/event/create.tsx (Corregido y Mejorado) ---
 import {
   SafeAreaView, Text, View, TextInput, TouchableOpacity,
   Alert, ActivityIndicator, ScrollView, Image
@@ -37,14 +36,13 @@ export default function CreateEventScreen() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [address, setAddress] = useState('');
+  const [place, setPlace] = useState('');
+  const [city, setCity] = useState('');
   const [date, setDate] = useState<Date | undefined>();
   const [images, setImage] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [companyId, setCompanyId] = useState<string>('');
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
-  // console.log()
-  //    navigator.geolocation = require('@react-native-community/geolocation');
-  //    navigator.geolocation = require('react-native-geolocation-service');
 
   const { data: companies = [], isLoading: loadingCompanies } = useQuery({
     queryKey: ['companies'],
@@ -75,7 +73,9 @@ export default function CreateEventScreen() {
     formData.append('companyId', companyId);
     formData.append('latitude', latitude.toString());
     formData.append('longitude', longitude.toString());
-    // Los campos 'city' y 'address' ahora se obtienen de Google Places, pero se pueden enviar si es necesario
+    formData.append('address', address);
+    formData.append('place', place);
+    formData.append('city', city); 
 
     images.forEach((image) => {
       // @ts-ignore
@@ -137,12 +137,14 @@ export default function CreateEventScreen() {
           <PlaceSearch onLocationSelected={({ name, lat, lng }) => {
             setLatitude(lat);
             setLongitude(lng);
-            setAddress(name); // si querés usarlo también como dirección visible
+            setPlace(name.split(',')[0]); // Guardar el nombre del lugar seleccionado
+            setAddress(name.split(',')[1]); // Guardar solo el nombre del lugar sin la ciudad
+            setCity(name.split(',')[2]); // Guardar la ciudad si es necesario
           }} />
 
 
           {/* Selector de Compañía */}
-          <View className="mt-20">
+          <View className="mt-12">
             <Text className="text-primary text-xl font-bold mb-2">Compañía Organizadora</Text>
             {loadingCompanies ? <ActivityIndicator color={Colors.accent} /> : (
               companies.map((company: any) => (

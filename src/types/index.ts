@@ -2,12 +2,6 @@
 
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
 
-declare module '@env' {
-  export const API_URL: string;
-  export const API_KEY: string;
-}
-
-
 export interface LoginCredentials {
   email: string;
   password: string;
