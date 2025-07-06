@@ -25,7 +25,7 @@ export default function RootLayout() {
     }
 
     // Una vez que todo está cargado, decidimos a dónde ir.
-    if (isAuthenticated) {
+    if (!isAuthenticated) {
       // Si el usuario está autenticado, lo enviamos a las pestañas principales.
       router.replace('/(tabs)');
     } else {

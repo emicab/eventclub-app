@@ -10,7 +10,7 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import apiClient from '@/src/lib/axios';
 import Colors from '@/src/constants/Colors';
 import PlaceSearch from '@/src/components/events/PlaceSearch';
-import { countryToCurrency } from '@/utils/countryToCurrency';
+import { countryToCurrency } from '@/src/utils/countryToCurrency';
 import { Ionicons } from '@expo/vector-icons';
 
 const createEvent = async (formData: FormData) => {

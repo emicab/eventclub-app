@@ -45,9 +45,9 @@ export default function EventListItem({ event, displayCurrency, exchangeRate }: 
           {address}, {city}
         </Text>
         <Text className="text-secondary text-sm mt-1">
-        Desde {displayCurrency} {convertedPrice}
+          Desde {displayCurrency} {convertedPrice}
         </Text>
-        
+
       </View>
       <TouchableOpacity className="p-2">
         <Ionicons name="heart-outline" size={24} color={Colors.text.secondary} />
