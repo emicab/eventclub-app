@@ -39,7 +39,6 @@ export default function CommunityScreen() {
     },
   });
 
-  console.log("channels ::", selectedChannel)
 
   useEffect(() => {
     if (!selectedChannel && channels?.length) {

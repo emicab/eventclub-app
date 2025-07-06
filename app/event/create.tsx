@@ -9,10 +9,9 @@ import * as ImagePicker from 'expo-image-picker';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import apiClient from '@/src/lib/axios';
 import Colors from '@/src/constants/Colors';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import Constants from 'expo-constants';
 import PlaceSearch from '@/src/components/events/PlaceSearch';
-// import { API_KEY } from '@env'
+import { countryToCurrency } from '@/utils/countryToCurrency';
+import { Ionicons } from '@expo/vector-icons';
 
 const createEvent = async (formData: FormData) => {
   const { data } = await apiClient.post('/api/admin/events', formData, {
@@ -26,22 +25,33 @@ const fetchCompanies = async () => {
   return data;
 };
 
+type TicketForm = {
+  name: string;
+  price: string; // Usamos string para el input
+  quantity: string;
+};
+
 
 export default function CreateEventScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [address, setAddress] = useState('');
   const [place, setPlace] = useState('');
   const [city, setCity] = useState('');
+  const [currency, setCurrency] = useState('USD');
+  const [country, setCountry] = useState('');
   const [date, setDate] = useState<Date | undefined>();
   const [images, setImage] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [companyId, setCompanyId] = useState<string>('');
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+  const [tickets, setTickets] = useState<TicketForm[]>([
+    { name: '', price: '', quantity: '' }
+  ]);
 
 
   const { data: companies = [], isLoading: loadingCompanies } = useQuery({
@@ -68,14 +78,15 @@ export default function CreateEventScreen() {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
-    formData.append('price', price);
     formData.append('date', date.toISOString());
     formData.append('companyId', companyId);
     formData.append('latitude', latitude.toString());
     formData.append('longitude', longitude.toString());
     formData.append('address', address);
     formData.append('place', place);
-    formData.append('city', city); 
+    formData.append('city', city);
+    // formData.append('country', country);
+    // formData.append('currency', currency);
 
     images.forEach((image) => {
       // @ts-ignore
@@ -84,7 +95,28 @@ export default function CreateEventScreen() {
       });
     });
 
+    // Convertimos los tickets a números y los añadimos al FormData
+    const formattedTickets = tickets
+      .filter(t => t.name && t.price && t.quantity)
+      .map(t => ({
+        name: t.name,
+        priceInCents: Math.round(parseFloat(t.price) * 100),
+        quantity: parseInt(t.quantity, 10),
+      }));
+
+    formData.append('tickets', JSON.stringify(formattedTickets));
+
     mutate(formData);
+  };
+
+  const handleTicketChange = (index: number, field: keyof TicketForm, value: string) => {
+    const newTickets = [...tickets];
+    newTickets[index][field] = value;
+    setTickets(newTickets);
+  };
+
+  const addTicketField = () => {
+    setTickets([...tickets, { name: '', price: '', quantity: '' }]);
   };
 
   const handlePickImage = async () => {
@@ -112,7 +144,7 @@ export default function CreateEventScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background pt-10 mt-safe">
+    <SafeAreaView className="flex-1 bg-background pt-10 my-safe">
       <Stack.Screen options={{ title: "Crear Nuevo Evento", headerTintColor: Colors.text.primary, headerStyle: { backgroundColor: Colors.background } }} />
       {/* CORRECCIÓN: Se añade keyboardShouldPersistTaps='handled' a la ScrollView */}
       <ScrollView keyboardShouldPersistTaps='handled'>
@@ -126,7 +158,6 @@ export default function CreateEventScreen() {
 
           <TextInput className="bg-card text-dark p-4 rounded-lg" placeholder="Título del Evento" value={title} onChangeText={setTitle} />
           <TextInput className="bg-card text-dark p-4 h-24 rounded-lg" multiline placeholder="Descripción del evento" value={description} onChangeText={setDescription} />
-          <TextInput className="bg-card text-dark p-4 rounded-lg" keyboardType="numeric" placeholder="Precio (ej: 15.99)" value={price} onChangeText={setPrice} />
           <TouchableOpacity onPress={() => setDatePickerVisibility(true)} className="bg-card p-4 rounded-lg">
             <Text className={date ? 'text-dark' : 'text-secondary'}>
               {date ? date.toLocaleString('es-ES') : 'Seleccionar Fecha y Hora'}
@@ -134,14 +165,49 @@ export default function CreateEventScreen() {
           </TouchableOpacity>
           <DateTimePickerModal isVisible={isDatePickerVisible} mode="datetime" onConfirm={handleConfirmDate} onCancel={() => setDatePickerVisibility(false)} />
 
-          <PlaceSearch onLocationSelected={({ name, lat, lng }) => {
-            setLatitude(lat);
-            setLongitude(lng);
-            setPlace(name.split(',')[0]); // Guardar el nombre del lugar seleccionado
-            setAddress(name.split(',')[1]); // Guardar solo el nombre del lugar sin la ciudad
-            setCity(name.split(',')[2]); // Guardar la ciudad si es necesario
-          }} />
+          <PlaceSearch
+            onLocationSelected={({ name, lat, lng }) => {
+              const parts = name.split(',');
+              const place = parts[0]?.trim();
+              const address = parts[1]?.trim();
+              const city = parts[2]?.trim();
+              const countryName = parts[parts.length - 1]?.trim();
 
+
+              console.log(countryName)
+
+              setLatitude(lat);
+              setLongitude(lng);
+              setPlace(place);
+              setAddress(address);
+              setCity(city);
+              setCountry(countryName);
+
+              // Mapear país → moneda
+              const mappedCurrency = countryToCurrency[countryName] || 'USD';
+              setCurrency(mappedCurrency);
+            }}
+          />
+          {currency && (
+            <View className="bg-glass rounded-lg p-4 mt-2">
+              <Text className="text-dark font-semibold">Moneda detectada:</Text>
+              <Text className="text-primary text-lg">{currency}</Text>
+            </View>
+          )}
+
+          {/* --- SECCIÓN DE ENTRADAS --- */}
+          <Text className="text-primary text-xl font-bold mt-4 mb-2">Tipos de Entrada</Text>
+          {tickets.map((ticket, index) => (
+            <View key={index} className="bg-slate-600 p-2 rounded-lg gap-4">
+              <TextInput className="bg-card text-dark p-4 rounded-md" placeholder="Nombre (ej: General)" value={ticket.name} onChangeText={(val) => handleTicketChange(index, 'name', val)} />
+              <TextInput className="bg-card text-dark p-4 rounded-md" keyboardType="numeric" placeholder="Precio (ej: 25.50)" value={ticket.price} onChangeText={(val) => handleTicketChange(index, 'price', val)} />
+              <TextInput className="bg-card text-dark p-4 rounded-md" keyboardType="numeric" placeholder="Cantidad disponible" value={ticket.quantity} onChangeText={(val) => handleTicketChange(index, 'quantity', val)} />
+            </View>
+          ))}
+          <TouchableOpacity onPress={addTicketField} className="flex-row items-center justify-center p-3 bg-card rounded-lg">
+            <Ionicons name="add-circle-outline" size={24} color={Colors.accent} />
+            <Text className="text-accent ml-2 font-bold">Añadir otro tipo de entrada</Text>
+          </TouchableOpacity>
 
           {/* Selector de Compañía */}
           <View className="mt-12">

@@ -37,7 +37,8 @@ export default {
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
@@ -48,7 +49,8 @@ export default {
         "projectId": "f0db90d4-15b6-4966-9d95-caa3c2d2e818"
       },
       apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://api.eventclub.app",
-      apiKey: process.env.EXPO_PUBLIC_API_KEY
+      apiKey: process.env.EXPO_PUBLIC_API_KEY,
+      apiExchange: process.env.EXPO_PUBLIC_KEY_EXCHANGE
     }
   }
 }

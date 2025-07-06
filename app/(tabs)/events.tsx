@@ -3,12 +3,14 @@ import EventListItem from '@/src/components/events/EventListItem';
 import Colors from '@/src/constants/Colors';
 import apiClient from '@/src/lib/axios';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useCurrencyStore } from '@/src/store/useCurrencyStore';
 import { Event, UserProfile } from '@/src/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+
 
 const fetchEvents = async (date?: string): Promise<Event[]> => {
   const dateFilter = date ? `?date=${date}` : '';
@@ -43,6 +45,8 @@ export default function EventsScreen() {
       queryFn: fetchMyProfile,
     });
 
+const { selectedCurrency, setCurrency, rates } = useCurrencyStore();
+    
 
   const { data: events, isLoading } = useQuery({
     queryKey: ['events', selectedDate],
@@ -84,7 +88,14 @@ export default function EventsScreen() {
             <View className="px-6 mt-6">
               <Text className="text-primary text-xl capitalize" style={{ fontFamily: 'Inter_700Bold' }}>{item.title}</Text>
               <View className="mt-4">
-                {item.data.map(event => <EventListItem key={event.id} event={event} />)}
+                {item.data.map(event => 
+                  <EventListItem 
+                    key={event.id} 
+                    event={event}
+                    displayCurrency={selectedCurrency}
+                    exchangeRate={rates[selectedCurrency]}
+                  />
+                )}
               </View>
             </View>
           )}

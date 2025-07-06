@@ -3,28 +3,62 @@ import {
     TouchableOpacity, ActivityIndicator, Share, Alert
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/src/lib/axios';
-import { Event } from '@/src/types';
+import { Event, TicketType } from '@/src/types';
 import Colors from '@/src/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker } from 'react-native-maps';
+import { useState } from 'react';
 
 const fetchEventDetails = async (eventId: string): Promise<Event> => {
     const { data } = await apiClient.get(`/api/events/${eventId}`);
     return data;
 };
 
+const createOrder = async (data: { ticketTypeId: string; quantity: number }) => {
+    const { data: responseData } = await apiClient.post('/api/orders', data);
+    return responseData;
+};
+
+
+
 export default function EventDetailScreen() {
     const { id: eventId } = useLocalSearchParams();
     const router = useRouter();
+    const queryClient = useQueryClient();
+
+    const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
+    const [quantity, setQuantity] = useState(1);
 
     const { data: event, isLoading } = useQuery({
         queryKey: ['eventDetails', eventId],
         queryFn: () => fetchEventDetails(eventId as string),
         enabled: !!eventId,
     });
+
+    const { mutate: handlePurchase, isPending } = useMutation({
+        mutationFn: createOrder,
+        onSuccess: () => {
+          Alert.alert(
+            '¡Compra Exitosa!',
+            'Tus entradas ya están disponibles en tu perfil.',
+            [
+              { text: 'Ver mis entradas', onPress: () => router.replace('/profile/tickets') },
+              { text: 'Aceptar', style: 'cancel', onPress: () => router.back() },
+            ]
+          );
+          queryClient.invalidateQueries({ queryKey: ['eventDetails', eventId] });
+          queryClient.invalidateQueries({ queryKey: ['myTickets'] });
+        },
+        onError: (error: any) => Alert.alert("Error", error.response?.data?.message || "No se pudo completar la compra."),
+      });
+
+    const handleConfirmPurchase = () => {
+        if (!selectedTicket) return;
+        handlePurchase({ ticketTypeId: selectedTicket.id, quantity });
+    };
 
 
     const handleShare = async () => {
@@ -50,12 +84,14 @@ export default function EventDetailScreen() {
         weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     });
 
+    const total = selectedTicket ? (selectedTicket.priceInCents / 100) * quantity : 0;
+
     const fullName = `${event.organizer?.firstName || ''} ${event.organizer?.lastName || ''}`;
     const avatarUrl = event.company?.logoUrl;
     const phone = event.organizer?.profile?.phone;
 
     return (
-        <View className="flex-1 bg-background pt-6 mt-safe">
+        <View className="flex-1 bg-background pt-6 my-safe">
             <Stack.Screen options={{ headerShown: false }} />
             <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
                 {/* --- Imagen de Cabecera --- */}
@@ -70,6 +106,29 @@ export default function EventDetailScreen() {
                             <Ionicons name="share-outline" size={24} color="white" />
                         </TouchableOpacity>
                     </SafeAreaView>
+                </View>
+
+                {/* --- NUEVA SECCIÓN DE ENTRADAS --- */}
+                <View className="mt-8 px-4">
+                    <Text className="text-primary text-xl mb-4" style={{ fontFamily: 'Inter_700Bold' }}>Entradas</Text>
+                    <View className="gap-4">
+                        {/* @ts-ignore */}
+                        {event.tickets?.map(ticket => (
+                            <TouchableOpacity
+                                key={ticket.id}
+                                onPress={() => {
+                                    setSelectedTicket(ticket);
+                                    setQuantity(1); // Resetea la cantidad al seleccionar un nuevo tipo
+                                }}
+                                className={`p-4 rounded-lg  border-2 ${selectedTicket?.id === ticket.id ? 'border-accent bg-accent/10' : 'border-glass-border bg-card'}`}
+                            >
+                                <View className="flex-row justify-between items-center">
+                                    <Text className="text-accent font-bold flex-1">{ticket.name}</Text>
+                                    <Text className="text-accent font-bold">US$ {(ticket.priceInCents / 100).toFixed(2)}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
 
                 {/* --- Contenido del Evento --- */}
@@ -98,54 +157,71 @@ export default function EventDetailScreen() {
                             </View>
                         </View>
                     </View>
-                {event.latitude !== 0 && event.longitude !== 0 && (
-                    <View className="mt-6 pt-6 border-t border-glass-border">
-                        <Text className="text-primary text-xl mb-2" style={{ fontFamily: 'Inter_700Bold' }}>
-                            Ubicación
-                        </Text>
-                        <View className='rounded-xl overflow-hidden'>
-                            <MapView
-                                style={{ width: '100%', height: 160, borderRadius: 24 }}
-                                region={{
-                                    latitude: event.latitude,
-                                    longitude: event.longitude,
-                                    latitudeDelta: 0.005,
-                                    longitudeDelta: 0.005,
-                                }}
-                                scrollEnabled={false}
-                                zoomEnabled={false}
-                                pitchEnabled={false}
-                                rotateEnabled={false}
-                                pointerEvents="none"
-                            >
-                                <Marker
-                                    coordinate={{ latitude: event.latitude, longitude: event.longitude }}
-                                    title={event.title}
-                                    description={event.address}
-                                    pinColor={Colors.accent}
-                                />
-                            </MapView>
+                    {event.latitude !== 0 && event.longitude !== 0 && (
+                        <View className="mt-6 pt-6 border-t border-glass-border">
+                            <Text className="text-primary text-xl mb-2" style={{ fontFamily: 'Inter_700Bold' }}>
+                                Ubicación
+                            </Text>
+                            <View className='rounded-xl overflow-hidden'>
+                                <MapView
+                                    style={{ width: '100%', height: 160, borderRadius: 24 }}
+                                    region={{
+                                        latitude: event.latitude,
+                                        longitude: event.longitude,
+                                        latitudeDelta: 0.005,
+                                        longitudeDelta: 0.005,
+                                    }}
+                                    scrollEnabled={false}
+                                    zoomEnabled={false}
+                                    pitchEnabled={false}
+                                    rotateEnabled={false}
+                                    pointerEvents="none"
+                                >
+                                    <Marker
+                                        coordinate={{ latitude: event.latitude, longitude: event.longitude }}
+                                        title={event.title}
+                                        description={event.address}
+                                        pinColor={Colors.accent}
+                                    />
+                                </MapView>
+                            </View>
                         </View>
-                    </View>
-                )}
+                    )}
                 </View>
             </ScrollView>
 
             {/* --- Footer de Compra --- */}
-            <View className="absolute mb-safe bottom-0 left-0 right-0 p-4 bg-background/95 backdrop:blur-sm border-t border-glass-border">
-                <View className="flex-row justify-between items-center">
-                    <View>
-                        <Text className="text-secondary text-sm">Desde</Text>
-                        <Text className="text-accent text-2xl font-bold">US$ {event.price?.toFixed(2) || 'N/A'}</Text>
+            {selectedTicket && (
+                <View className="absolute bottom-0 left-0 right-0 p-4 bg-background/95 border-t border-glass-border">
+                    {/* Selector de Cantidad */}
+                    <View className="flex-row justify-between items-center mb-4">
+                        <Text className="text-primary text-lg font-bold">Cantidad</Text>
+                        <View className="flex-row items-center gap-4">
+                            <TouchableOpacity onPress={() => setQuantity(q => Math.max(1, q - 1))}>
+                                <Ionicons name="remove-circle-outline" size={32} color={Colors.text.primary} />
+                            </TouchableOpacity>
+                            <Text className="text-primary text-2xl font-bold w-8 text-center">{quantity}</Text>
+                            <TouchableOpacity onPress={() => setQuantity(q => q + 1)}>
+                                <Ionicons name="add-circle" size={32} color={Colors.accent} />
+                            </TouchableOpacity>
+                        </View>
                     </View>
+
+                    {/* Botón de Pago */}
                     <TouchableOpacity
-                        // onPress={() => router.push(`/checkout/${event.id}`)}
-                        className="bg-accent px-8 py-4 rounded-full"
+                        onPress={handleConfirmPurchase}
+                        disabled={isPending}
+                        className="bg-accent px-8 py-4 rounded-full flex-row justify-between items-center"
                     >
-                        <Text className="text-background font-bold text-base">Comprar</Text>
+                        {isPending ? <ActivityIndicator color={Colors.background} /> : (
+                            <>
+                                <Text className="text-background font-bold text-base">Pagar</Text>
+                                <Text className="text-background font-bold text-base">US$ {total.toFixed(2)}</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
                 </View>
-            </View>
+            )}
         </View>
     );
 }
