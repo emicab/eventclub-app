@@ -38,7 +38,6 @@ export default function PostCard({ post }: PostCardProps) {
   const router = useRouter();
   const { showActionSheetWithOptions } = useActionSheet();
 
-
   const authorName = `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim();
   const avatarUrl = post.author.profile?.avatarUrl || 'https://placehold.co/100';
 
@@ -114,11 +113,12 @@ export default function PostCard({ post }: PostCardProps) {
               source={{ uri: avatarUrl }}
               className="w-10 h-10 rounded-full"
             />
-            <View className="ml-3">
+              <View className="ml-3">
+            <TouchableOpacity onPress={() => router.push(`/user/${post.authorId}`)}>
               <View className="flex-row items-center">
-                <Text className="text-primary mr-2" style={{ fontFamily: 'Inter_700Bold' }}>
-                  {authorName}
-                </Text>
+                  <Text className="text-primary mr-2" style={{ fontFamily: 'Inter_700Bold' }}>
+                    {authorName}
+                  </Text>
                 <Text>
                   {
                     post?.author?.isVerified && (
@@ -127,6 +127,7 @@ export default function PostCard({ post }: PostCardProps) {
                   }
                 </Text>
               </View>
+                  </TouchableOpacity>
               <Text className="text-secondary text-xs" style={{ fontFamily: 'Inter_400Regular' }}>
                 {/* 3. Usamos la nueva función para mostrar la fecha relativa */}
                 {formatRelativeTime(post.createdAt)}

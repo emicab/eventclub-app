@@ -1,446 +1,118 @@
-// --- app/(tabs)/profile.tsx (Refactorizado con useQuery para datos siempre actualizados) ---
-import {
-    SafeAreaView,
-    Text,
-    View,
-    Image,
-    TouchableOpacity,
-    ScrollView,
-    ActivityIndicator,
-} from "react-native";
-import { useAuth } from "@/src/hooks/useAuth";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import Colors from "@/src/constants/Colors";
-import { BlurView } from "expo-blur";
-import { useQuery } from "@tanstack/react-query"; // Importar useQuery
-import apiClient from "@/src/lib/axios"; // Importar nuestro cliente de API
-import { UserProfile } from "@/src/types"; // Importar el tipo de perfil
-import CurrencySelector from "@/src/components/profile/CurrencySelector";
+// En app/(tabs)/profile.tsx
 
-// Función para obtener los datos del perfil desde la API
+import {
+    SafeAreaView, Text, View, Image, TouchableOpacity,
+    ScrollView, ActivityIndicator
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { useAuthStore } from "@/src/store/useAuthStore";
+import apiClient from "@/src/lib/axios";
+import { UserProfile } from "@/src/types";
+import Colors from "@/src/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
+import ActionButton from "@/src/components/ui/ActionButton";
+import InfoChip from "@/src/components/profile/InfoChip";
+
+
 const fetchMyProfile = async (): Promise<UserProfile> => {
-    // Este endpoint sí devuelve el perfil completo, incluyendo los datos anidados.
     const { data } = await apiClient.get("/api/users/me");
     return data;
 };
 
+const getAge = (dateString?: string | Date) => {
+    if (!dateString) return null;
+    const birthDate = new Date(dateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
+};
+
 export default function ProfileScreen() {
-    const { logout } = useAuth();
+    const logout = useAuthStore((state) => state.logout);
     const router = useRouter();
 
-    // Usamos useQuery para obtener siempre los datos más actualizados del perfil
-    const {
-        data: user,
-        isLoading,
-        isError,
-        error,
-    } = useQuery({
+    const { data: user, isLoading, isError } = useQuery({
         queryKey: ["myProfile"],
         queryFn: fetchMyProfile,
-        refetchOnWindowFocus: true, // Vuelve a cargar los datos cuando la pantalla gana foco
+        refetchOnWindowFocus: true,
     });
 
-    const getAge = (dateString?: string | Date) => {
-        if (!dateString) return null;
-        const birthDate = new Date(dateString);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-        return age;
+    const handleLogout = () => {
+        logout();
+        router.replace('/login'); // Redirige a la pantalla de login
     };
 
-    // Mientras carga, mostramos un indicador
-    if (isLoading) {
-        return (
-            <SafeAreaView className='flex-1 bg-background justify-center items-center'>
-                <ActivityIndicator size='large' color={Colors.accent} />
-            </SafeAreaView>
-        );
-    }
+    if (isLoading) return <SafeAreaView className='flex-1 bg-background justify-center'><ActivityIndicator size='large' /></SafeAreaView>;
+    if (isError) return <SafeAreaView className='flex-1 bg-background justify-center'><Text className='text-error'>Error al cargar el perfil.</Text></SafeAreaView>;
 
-    // Si hay un error, lo mostramos
-    if (isError) {
-        return (
-            <SafeAreaView className='flex-1 bg-background justify-center items-center'>
-                <Text className='text-error'>
-                    Error al cargar el perfil: {(error as any).message}
-                </Text>
-            </SafeAreaView>
-        );
-    }
-
-    // 'user' ahora es el objeto que viene de TanStack Query
-    const displayName =
-        user?.profile?.nickname ||
-        `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
     const fullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+    const age = getAge(user?.profile?.dateOfBirth);
 
     return (
-        <SafeAreaView className='flex-1 my-safe pb-safe bg-background pt-6'>
-            <ScrollView>
+        <SafeAreaView className='flex-1 bg-background my-safe'>
+            <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
                 <View className='p-6'>
                     {/* --- Cabecera --- */}
                     <View className='flex-row items-center justify-between'>
-                        <View className='flex-row items-center'>
+                        <View className='flex-row items-center flex-1'>
                             <Image
-                                source={{
-                                    uri:
-                                        user?.profile?.avatarUrl ||
-                                        "https://placehold.co/100",
-                                }}
+                                source={{ uri: user?.profile?.avatarUrl || "https://placehold.co/100" }}
                                 className='w-20 h-20 rounded-full'
                             />
                             <View className='ml-4'>
-                                <Text
-                                    className='text-primary text-2xl'
-                                    style={{ fontFamily: "Inter_700Bold" }}
-                                >
-                                    {fullName}
-                                </Text>
-                                <Text
-                                    className='text-primary text-lg'
-                                    style={{ fontFamily: "Inter_700Regular" }}
-                                >
-                                    {displayName}
-                                </Text>
-                                {/* Espacio para Puntos */}
-                                <Text
-                                    className='text-accent'
-                                    style={{ fontFamily: "Inter_400Regular" }}
-                                >
-                                    ✨ {user?.points || 0} Puntos
-                                </Text>
+                                <Text className='text-primary text-2xl font-bold'>{fullName}</Text>
+                                <Text className='text-secondary text-lg'>@{user?.profile?.nickname}</Text>
+                                <Text className='text-accent mt-1'>✨ {user?.points || 0} Puntos</Text>
                             </View>
                         </View>
-                        <View className='flex-row items-center gap-6'>
-                            <View className='flex-row items-center gap-4 border-r-2 border-r-secondary pr-4'>
-                                <TouchableOpacity
-                                    onPress={() =>
-                                        router.push("/profile/my-qr")
-                                    }
-                                >
-                                    <Ionicons
-                                        name='qr-code'
-                                        size={28}
-                                        color={Colors.text.secondary}
-                                    />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() =>
-                                        router.push("/profile/scan-qr")
-                                    }
-                                >
-                                    <Ionicons
-                                        name='camera'
-                                        size={28}
-                                        color={Colors.text.secondary}
-                                    />
-                                </TouchableOpacity>
-                            </View>
+                        <TouchableOpacity onPress={() => router.push("/profile/edit")}>
+                            <Ionicons name='create-outline' size={28} color={Colors.text.secondary} />
+                        </TouchableOpacity>
+                    </View>
 
-                            <TouchableOpacity
-                                onPress={() => router.push("/profile/edit")}
-                            >
-                                <Ionicons
-                                    name='create-outline'
-                                    size={28}
-                                    color={Colors.text.secondary}
-                                />
-                            </TouchableOpacity>
+                    {/* --- Panel de Acciones Rápidas --- */}
+                    <View className="mt-8">
+                        <View className="flex-row gap-3 mb-3">
+                           <ActionButton icon="qr-code" text="Mi QR" href="/profile/my-qr" />
+                           <ActionButton icon="camera" text="Escanear" href="/profile/scan-qr" />
+                        </View>
+                        <View className="flex-row gap-3">
+                           <ActionButton icon="people-outline" text="Amigos" href="/profile/friends" />
+                           <ActionButton icon="heart-outline" text="Favoritos" href="/profile/favorites" />
                         </View>
                     </View>
 
                     {/* --- Sobre mí --- */}
-                    <BlurView
-                        intensity={80}
-                        tint='dark'
-                        className='p-4 rounded-2xl mt-8'
-                        style={{
-                            borderWidth: 1,
-                            borderColor: Colors.glass.border,
-                        }}
-                    >
-                        <Text
-                            className='text-primary text-lg mb-2'
-                            style={{ fontFamily: "Inter_700Bold" }}
-                        >
-                            Sobre mí
-                        </Text>
-
-                        <Text
-                            className='text-secondary mt-2'
-                            style={{ fontFamily: "Inter_400Regular" }}
-                        >
-                            {user?.profile?.bio ||
-                                "Añade una descripción sobre ti."}
-                        </Text>
+                    <View className='mt-6 p-4 bg-background rounded-2xl border-2 border-accent'>
+                        <Text className='text-primary text-lg font-bold mb-2'>Sobre mí</Text>
+                        <Text className='text-secondary'>{user?.profile?.bio || "Añade una descripción sobre ti para que otros puedan conocerte mejor."}</Text>
                         <View className='flex-row flex-wrap mt-4'>
-                            {user?.profile?.city && (
-                                <InfoChip
-                                    icon='location-outline'
-                                    text={`Vive en ${user.profile.city}`}
-                                />
-                            )}
-                            {user?.profile?.hometown && (
-                                <InfoChip
-                                    icon='flag-outline'
-                                    text={`De ${user.profile.hometown}`}
-                                />
-                            )}
-                            {getAge(user?.profile?.dateOfBirth) && (
-                                <InfoChip
-                                    icon='calendar-outline'
-                                    text={`${getAge(user?.profile?.dateOfBirth)} años`}
-                                />
-                            )}
+                            {user?.profile?.city && <InfoChip icon='location-outline' text={`Vive en ${user.profile.city}`} />}
+                            {user?.profile?.hometown && <InfoChip icon='flag-outline' text={`De ${user.profile.hometown}`} />}
+                            {age && <InfoChip icon='calendar-outline' text={`${age} años`} />}
                         </View>
-                    </BlurView>
-
-                    {/* --- Área de Trabajo --- */}
-                    <BlurView
-                        intensity={80}
-                        tint='dark'
-                        className='p-4 rounded-2xl mt-6'
-                        style={{
-                            borderWidth: 1,
-                            borderColor: Colors.glass.border,
-                        }}
-                    >
-                        <View className='flex-row justify-between items-center'>
-                            <Text
-                                className='text-primary text-lg'
-                                style={{ fontFamily: "Inter_700Bold" }}
-                            >
-                                Mi Perfil Laboral
-                            </Text>
-                            <Ionicons
-                                name='lock-closed-outline'
-                                size={16}
-                                color={Colors.text.secondary}
-                            />
-                        </View>
-                        <Text
-                            className='text-secondary mt-2 mb-4'
-                            style={{ fontFamily: "Inter_400Regular" }}
-                        >
-                            Esta información es privada y solo se compartirá
-                            cuando apliques a un trabajo.
-                        </Text>
-                        <InfoChip
-                            icon='search-outline'
-                            text={
-                                user?.profile?.jobSeeking ||
-                                "Define tu búsqueda"
-                            }
-                        />
-                        <View className='mt-2'>
-                            {/* @ts-ignore */}
-                            {user?.profile?.skills?.length > 0 ? (
-                                <View className='flex-row flex-wrap'>
-                                    {/* @ts-ignore */}
-                                    {user.profile.skills.map((skill) => (
-                                        <SkillChip key={skill} text={skill} />
-                                    ))}
-                                </View>
-                            ) : (
-                                <Text className='text-secondary italic'>
-                                    Añade tus habilidades.
-                                </Text>
-                            )}
-                        </View>
-
-                        {/* --- NUEVA SECCIÓN PARA ENTRADAS Y BENEFICIOS --- */}
-                    </BlurView>
-
-                    <BlurView
-                        intensity={80}
-                        tint='dark'
-                        className='p-4 rounded-2xl mt-6'
-                        style={{
-                            borderWidth: 1,
-                            borderColor: Colors.glass.border,
-                        }}
-                    >
-                        <View className='flex-row justify-between items-center'>
-                            <Text
-                                className='text-primary text-lg'
-                                style={{ fontFamily: "Inter_700Bold" }}
-                            >
-                                Mi Compras
-                            </Text>
-                            <Ionicons
-                                name='cart-sharp'
-                                size={16}
-                                color={Colors.text.secondary}
-                            />
-                        </View>
-                        <View className='px-4 mt-2 gap-2'>
-                            <TouchableOpacity
-                                onPress={() => router.push("/profile/tickets")}
-                                className='bg-card p-4 rounded-lg flex-row items-center justify-between'
-                            >
-                                <View className='flex-row items-center'>
-                                    <Ionicons
-                                        name='ticket-outline'
-                                        size={24}
-                                        color={Colors.accent}
-                                    />
-                                    <Text className='text-dark text-base ml-3 font-bold'>
-                                        Mis Entradas
-                                    </Text>
-                                </View>
-                                <Ionicons
-                                    name='chevron-forward'
-                                    size={24}
-                                    color={Colors.text.secondary}
-                                />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() =>
-                                    router.push("/profile/benefits-history")
-                                }
-                                className='bg-card p-4 rounded-lg flex-row items-center justify-between'
-                            >
-                                <View className='flex-row items-center'>
-                                    <Ionicons
-                                        name='pricetag-outline'
-                                        size={24}
-                                        color={Colors.accent}
-                                    />
-                                    <Text className='text-dark text-base ml-3 font-bold'>
-                                        Beneficios Usados
-                                    </Text>
-                                </View>
-                                <Ionicons
-                                    name='chevron-forward'
-                                    size={24}
-                                    color={Colors.text.secondary}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    </BlurView>
-                    <BlurView
-                        intensity={80}
-                        tint='dark'
-                        className='p-4 rounded-2xl mt-6'
-                        style={{
-                            borderWidth: 1,
-                            borderColor: Colors.glass.border,
-                        }}
-                    >
-                        <View className='flex-row justify-between items-center'>
-                            <Text
-                                className='text-primary text-lg'
-                                style={{ fontFamily: "Inter_700Bold" }}
-                            >
-                                Mi Eventos Guardados
-                            </Text>
-                            <Ionicons
-                                name='heart'
-                                size={16}
-                                color={Colors.text.secondary}
-                            />
-                        </View>
-                        <View className='px-4 mt-2 gap-2'>
-                            <TouchableOpacity
-                                onPress={() =>
-                                    router.push("/profile/favorites")
-                                }
-                                className='bg-card p-4 rounded-lg flex-row items-center justify-between'
-                            >
-                                <View className='flex-row items-center'>
-                                    <Ionicons
-                                        name='pricetag-outline'
-                                        size={24}
-                                        color={Colors.accent}
-                                    />
-                                    <Text className='text-dark text-base ml-3 font-bold'>
-                                        Mis Favoritos
-                                    </Text>
-                                </View>
-                                <Ionicons
-                                    name='chevron-forward'
-                                    size={24}
-                                    color={Colors.text.secondary}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    </BlurView>
-                    <BlurView
-                        intensity={80}
-                        tint='dark'
-                        className='p-4 rounded-2xl mt-6'
-                        style={{
-                            borderWidth: 1,
-                            borderColor: Colors.glass.border,
-                        }}
-                    >
-                        <View className='flex-row justify-between items-center'>
-                            <Text
-                                className='text-primary text-lg ml-3'
-                                style={{ fontFamily: "Inter_700Bold" }}
-                            >
-                                Mis Amigos
-                            </Text>
-                            <Ionicons
-                                name='people-outline'
-                                size={16}
-                                color={Colors.text.secondary}
-                            />
-                        </View>
-                        <TouchableOpacity
-                            onPress={() => router.push("/profile/friends")}
-                            className='flex-row items-center bg-card p-4 rounded-lg'
-                        >
-                            <Ionicons
-                                name='people-outline'
-                                size={24}
-                                color={Colors.text.secondary}
-                            />
-                            <Text className='text-primary text-lg ml-4'>
-                                Amigos
-                            </Text>
-                        </TouchableOpacity>
-                    </BlurView>
-                    {/* Añadimos nuestro selector de moneda */}
-                    <View>
-                        <CurrencySelector />
                     </View>
 
-                    <TouchableOpacity
-                        className='w-full mt-8 sm:pb-safe rounded-xl p-4 items-center'
-                        onPress={logout}
-                    >
-                        <Text
-                            className='text-primary text-base'
-                            style={{ fontFamily: "Inter_700Bold" }}
-                        >
-                            Cerrar Sesión
-                        </Text>
+                    <View className='mt-6 p-4 bg-background rounded-2xl border-2 border-accent'>
+                        <Text className='text-primary text-lg font-bold mb-2'>CV Express</Text>
+                        <Text className='text-secondary'>{user?.profile?.bio || "Añade una descripción sobre ti para que otros puedan conocerte mejor."}</Text>
+                        <View className='flex-row flex-wrap mt-4'>
+                            {user?.profile?.skills && user.profile.skills.map((skill: string, index: number) => (
+                                <InfoChip key={index} icon='checkmark' text={skill} />
+                            ))}
+                            
+                        </View>
+                    </View>
+                    
+                    {/* --- Botón de Cerrar Sesión --- */}
+                    <TouchableOpacity className='w-full mt-8 p-4 items-center' onPress={handleLogout}>
+                        <Text className='text-primary font-bold'>Cerrar Sesión</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 }
-
-const InfoChip = ({ icon, text }: { icon: any; text: string }) => (
-    <View className='flex-row items-center bg-white/5 rounded-full px-3 py-1.5 mr-2 mb-2'>
-        <Ionicons name={icon} size={14} color={Colors.text.secondary} />
-        <Text
-            className='text-secondary text-xs ml-1.5'
-            style={{ fontFamily: "Inter_400Regular" }}
-        >
-            {text}
-        </Text>
-    </View>
-);
-
-const SkillChip = ({ text }: { text: string }) => (
-    <View className='bg-accent/20 rounded-full px-3 py-1.5 mr-2 mb-2'>
-        <Text className='text-accent text-xs font-bold'>{text}</Text>
-    </View>
-);

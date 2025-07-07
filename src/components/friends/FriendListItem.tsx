@@ -24,7 +24,7 @@ export default function FriendListItem({ friend }: Props) {
         className="w-12 h-12 rounded-full"
       />
       <View className="flex-1 ml-4">
-        <Text className="text-primary font-bold">{friend.firstName} {friend.lastName}</Text>
+        <Text className="text-dark font-bold">{friend.firstName} {friend.lastName}</Text>
         <Text className="text-secondary">@{friend.profile?.nickname}</Text>
       </View>
       <TouchableOpacity onPress={handleSendMessage} className="p-2">

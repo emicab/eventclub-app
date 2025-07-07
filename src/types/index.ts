@@ -73,8 +73,15 @@ export type UserInfo = {
 };
 
 export type Post = {
-  likedByCurrentUser: any;
-  lastComment: any;
+  authorId: string;
+  likedByCurrentUser: boolean;
+  lastComment: {
+    author:{
+      firstName: string;
+      lastName: string;
+    }
+    text: string;
+  };
   id: string;
   author: UserInfo;
   content: string;

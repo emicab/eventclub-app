@@ -11,6 +11,7 @@ function FriendsList() {
   const { data: friends, isLoading } = useQuery({
     queryKey: ['friends'],
     queryFn: api.getFriends,
+    refetchOnWindowFocus: true,
   });
 
   if (isLoading) return <ActivityIndicator className="mt-8" />;
@@ -49,6 +50,8 @@ export default function FriendsScreen() {
   return (
     <View className="flex-1 bg-background pt-10 my-safe px-6  ">
       <Stack.Screen options={{ title: 'Amigos' }} />
+      <Text className="text-primary text-3xl mb-4" style={{ fontFamily: 'Inter_700Bold' }}>Mis amigos</Text>
+
       {/* Selector de Pestañas */}
       <View className="flex-row mb-4 bg-card rounded-lg p-1">
         <TouchableOpacity 

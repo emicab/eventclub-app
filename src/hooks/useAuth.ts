@@ -20,11 +20,6 @@ export const useAuth = () => {
     onSuccess: (data) => {
       // 3. En caso de éxito, guardamos en el store y redirigimos
       const { user, token } = data;
-      console.log(token) 
-      /* 
-       eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWNpaHdlY3QwMDAwYmd2Mjd4c2VtMWdpIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzUxODQyMzgzLCJleHAiOjE3NTI0NDcxODN9._neMnJ1NVZBjuf1UoApOEDU3k6tyqZO3qeeU9fpQWdI
-     
-      */ 
       loginToStore(token, user);
       router.replace('/(tabs)');
     },
