@@ -8,7 +8,7 @@ import apiClient from '@/src/lib/axios';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import VerifyCheckIcon from '../ui/VerifyCheckIcon';
-import { Post, UserInfo } from '@/src/types';
+import { Post } from '@/src/types';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 

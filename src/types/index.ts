@@ -105,7 +105,12 @@ export type Event = {
   city: string;
   imageUrls: string[];
   price: Float;
-  currency: string
+  currency: string;
+  isFavoritedByCurrentUser: boolean;
+  _count: {
+    FavoriteEvent: number;
+    tickets: number;
+  };
 }
 
 export type TicketType = {

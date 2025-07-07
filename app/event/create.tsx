@@ -12,6 +12,7 @@ import Colors from '@/src/constants/Colors';
 import PlaceSearch from '@/src/components/events/PlaceSearch';
 import { countryToCurrency } from '@/src/utils/countryToCurrency';
 import { Ionicons } from '@expo/vector-icons';
+import { useCurrencyStore } from '@/src/store/useCurrencyStore';
 
 const createEvent = async (formData: FormData) => {
   const { data } = await apiClient.post('/api/admin/events', formData, {
@@ -43,15 +44,21 @@ export default function CreateEventScreen() {
   const [place, setPlace] = useState('');
   const [city, setCity] = useState('');
   const [currency, setCurrency] = useState('USD');
-  const [country, setCountry] = useState('');
+  // const [country, setCountry] = useState('');
   const [date, setDate] = useState<Date | undefined>();
   const [images, setImage] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [companyId, setCompanyId] = useState<string>('');
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
+
+  const [eventCurrency, setEventCurrency] = useState('USD'); 
+  
   const [tickets, setTickets] = useState<TicketForm[]>([
     { name: '', price: '', quantity: '' }
   ]);
+
+  const { setCurrency: setCountry } = useCurrencyStore();
+  
 
 
   const { data: companies = [], isLoading: loadingCompanies } = useQuery({
@@ -97,11 +104,12 @@ export default function CreateEventScreen() {
 
     // Convertimos los tickets a números y los añadimos al FormData
     const formattedTickets = tickets
-      .filter(t => t.name && t.price && t.quantity)
+      .filter(t => t.name && t.price && t.quantity) // Filtramos los que están vacíos
       .map(t => ({
         name: t.name,
         priceInCents: Math.round(parseFloat(t.price) * 100),
         quantity: parseInt(t.quantity, 10),
+        currency: eventCurrency, // ¡Añadimos la moneda del evento!
       }));
 
     formData.append('tickets', JSON.stringify(formattedTickets));
@@ -181,18 +189,17 @@ export default function CreateEventScreen() {
               setPlace(place);
               setAddress(address);
               setCity(city);
-              setCountry(countryName);
-
-              // Mapear país → moneda
+              
               const mappedCurrency = countryToCurrency[countryName] || 'USD';
-              setCurrency(mappedCurrency);
+              console.log('Moneda mapeada:', mappedCurrency);
+              setEventCurrency(mappedCurrency);
             }}
           />
           {currency && (
             <View className="bg-glass rounded-lg p-4 mt-2">
-              <Text className="text-dark font-semibold">Moneda detectada:</Text>
-              <Text className="text-primary text-lg">{currency}</Text>
-            </View>
+            <Text className="text-dark font-semibold">Moneda del Evento (detectada):</Text>
+            <Text className="text-primary text-lg">{eventCurrency}</Text>
+          </View>
           )}
 
           {/* --- SECCIÓN DE ENTRADAS --- */}

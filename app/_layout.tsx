@@ -7,6 +7,7 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 import '../global.css'
 import { usePushNotifications } from '@/src/hooks/usePushNotifications';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import { useInitializeCurrency } from '@/src/hooks/useInitializeCurrency';
 
 
 export default function RootLayout() {
@@ -17,6 +18,7 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_700Bold,
   });
+  useInitializeCurrency();
 
   useEffect(() => {
     // Si las fuentes o el estado de la store no están listos, no hacemos nada todavía.
@@ -25,7 +27,7 @@ export default function RootLayout() {
     }
 
     // Una vez que todo está cargado, decidimos a dónde ir.
-    if (!isAuthenticated) {
+    if (isAuthenticated) {
       // Si el usuario está autenticado, lo enviamos a las pestañas principales.
       router.replace('/(tabs)');
     } else {

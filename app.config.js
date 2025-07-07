@@ -38,7 +38,8 @@ export default {
         }
       ],
       "expo-web-browser",
-      "expo-localization"
+      "expo-localization",
+      "expo-location"
     ],
     "experiments": {
       "typedRoutes": true

@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker } from 'react-native-maps';
 import { useState } from 'react';
+import { useCurrencyStore } from '@/src/store/useCurrencyStore';
 
 const fetchEventDetails = async (eventId: string): Promise<Event> => {
     const { data } = await apiClient.get(`/api/events/${eventId}`);
@@ -31,6 +32,8 @@ export default function EventDetailScreen() {
 
     const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
     const [quantity, setQuantity] = useState(1);
+
+    const { displayCurrency, rates } = useCurrencyStore();
 
     const { data: event, isLoading } = useQuery({
         queryKey: ['eventDetails', eventId],
@@ -84,7 +87,9 @@ export default function EventDetailScreen() {
         weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     });
 
-    const total = selectedTicket ? (selectedTicket.priceInCents / 100) * quantity : 0;
+    const totalInUSD = selectedTicket ? ((selectedTicket.priceInCents / 100) / (rates[selectedTicket.currency] ?? 1)) * quantity : 0;
+    const totalDisplayPrice = (totalInUSD * (rates[displayCurrency] ?? 1)).toFixed(2);
+    
 
     const fullName = `${event.organizer?.firstName || ''} ${event.organizer?.lastName || ''}`;
     const avatarUrl = event.company?.logoUrl;
@@ -112,22 +117,29 @@ export default function EventDetailScreen() {
                 <View className="mt-8 px-4">
                     <Text className="text-primary text-xl mb-4" style={{ fontFamily: 'Inter_700Bold' }}>Entradas</Text>
                     <View className="gap-4">
-                        {/* @ts-ignore */}
-                        {event.tickets?.map(ticket => (
-                            <TouchableOpacity
-                                key={ticket.id}
-                                onPress={() => {
-                                    setSelectedTicket(ticket);
-                                    setQuantity(1); // Resetea la cantidad al seleccionar un nuevo tipo
-                                }}
-                                className={`p-4 rounded-lg  border-2 ${selectedTicket?.id === ticket.id ? 'border-accent bg-accent/10' : 'border-glass-border bg-card'}`}
-                            >
-                                <View className="flex-row justify-between items-center">
-                                    <Text className="text-accent font-bold flex-1">{ticket.name}</Text>
-                                    <Text className="text-accent font-bold">US$ {(ticket.priceInCents / 100).toFixed(2)}</Text>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
+                        {event.tickets?.map(ticket => {
+                            
+                            const ticketPriceInUSD = (ticket.priceInCents / 100) / (rates[ticket.currency] ?? 1);
+                            const ticketDisplayPrice = (ticketPriceInUSD * (rates[displayCurrency] ?? 1)).toFixed(2);
+                            
+
+                            return (
+                                <TouchableOpacity
+                                    key={ticket.id}
+                                    onPress={() => {
+                                        setSelectedTicket(ticket);
+                                        setQuantity(1);
+                                    }}
+                                    className={`p-4 rounded-lg border-2 ${selectedTicket?.id === ticket.id ? 'border-accent bg-accent/10' : 'border-glass-border bg-card'}`}
+                                >
+                                    <View className="flex-row justify-between items-center">
+                                        <Text className="text-accent font-bold flex-1">{ticket.name}</Text>
+                                        {/* 5. Mostramos el precio convertido con la moneda correcta */}
+                                        <Text className="text-accent font-bold">{displayCurrency} {ticketDisplayPrice}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
                 </View>
 
@@ -216,7 +228,7 @@ export default function EventDetailScreen() {
                         {isPending ? <ActivityIndicator color={Colors.background} /> : (
                             <>
                                 <Text className="text-background font-bold text-base">Pagar</Text>
-                                <Text className="text-background font-bold text-base">US$ {total.toFixed(2)}</Text>
+                                <Text className="text-background font-bold text-base">{displayCurrency} {totalDisplayPrice}</Text>
                             </>
                         )}
                     </TouchableOpacity>
