@@ -114,7 +114,32 @@ export default function ProfileScreen() {
                                 </Text>
                             </View>
                         </View>
-                        <View className="flex-row items-center gap-4">
+                        <View className='flex-row items-center gap-6'>
+                            <View className='flex-row items-center gap-4 border-r-2 border-r-secondary pr-4'>
+                                <TouchableOpacity
+                                    onPress={() =>
+                                        router.push("/profile/my-qr")
+                                    }
+                                >
+                                    <Ionicons
+                                        name='qr-code'
+                                        size={28}
+                                        color={Colors.text.secondary}
+                                    />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() =>
+                                        router.push("/profile/scan-qr")
+                                    }
+                                >
+                                    <Ionicons
+                                        name='camera'
+                                        size={28}
+                                        color={Colors.text.secondary}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+
                             <TouchableOpacity
                                 onPress={() => router.push("/profile/edit")}
                             >
@@ -344,10 +369,46 @@ export default function ProfileScreen() {
                             </TouchableOpacity>
                         </View>
                     </BlurView>
+                    <BlurView
+                        intensity={80}
+                        tint='dark'
+                        className='p-4 rounded-2xl mt-6'
+                        style={{
+                            borderWidth: 1,
+                            borderColor: Colors.glass.border,
+                        }}
+                    >
+                        <View className='flex-row justify-between items-center'>
+                            <Text
+                                className='text-primary text-lg ml-3'
+                                style={{ fontFamily: "Inter_700Bold" }}
+                            >
+                                Mis Amigos
+                            </Text>
+                            <Ionicons
+                                name='people-outline'
+                                size={16}
+                                color={Colors.text.secondary}
+                            />
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => router.push("/profile/friends")}
+                            className='flex-row items-center bg-card p-4 rounded-lg'
+                        >
+                            <Ionicons
+                                name='people-outline'
+                                size={24}
+                                color={Colors.text.secondary}
+                            />
+                            <Text className='text-primary text-lg ml-4'>
+                                Amigos
+                            </Text>
+                        </TouchableOpacity>
+                    </BlurView>
                     {/* Añadimos nuestro selector de moneda */}
-                            <View>
-                                <CurrencySelector />
-                            </View>
+                    <View>
+                        <CurrencySelector />
+                    </View>
 
                     <TouchableOpacity
                         className='w-full mt-8 sm:pb-safe rounded-xl p-4 items-center'
