@@ -27,6 +27,7 @@
     "dotenv": "^17.0.1",
     "expo": "53.0.17",
     "expo-blur": "~14.1.5",
+    "expo-camera": "~16.1.10",
     "expo-constants": "~17.1.6",
     "expo-font": "~13.3.1",
     "expo-haptics": "~14.1.4",
@@ -34,6 +35,8 @@
     "expo-image-picker": "~16.1.4",
     "expo-linear-gradient": "~14.1.5",
     "expo-linking": "~7.1.5",
+    "expo-localization": "~16.1.6",
+    "expo-location": "~18.1.6",
     "expo-notifications": "~0.31.3",
     "expo-router": "~5.1.1",
     "expo-splash-screen": "~0.30.9",
@@ -50,8 +53,10 @@
     "react-native-dotenv": "^3.4.11",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-gifted-chat": "^2.8.1",
     "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-image-viewing": "^0.2.2",
+    "react-native-keyboard-controller": "^1.17.5",
     "react-native-localize": "^3.4.2",
     "react-native-maps": "1.20.1",
     "react-native-modal-datetime-picker": "^18.0.0",
@@ -65,9 +70,7 @@
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.4.17",
     "zustand": "^5.0.5",
-    "expo-localization": "~16.1.6",
-    "expo-location": "~18.1.6",
-    "expo-camera": "~16.1.10"
+    "expo-dev-client": "~5.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

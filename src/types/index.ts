@@ -156,3 +156,21 @@ export type TicketDetail = {
   status: string;
 
 };
+
+export type Conversation = {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  lastMessage?: Message;
+  isGroup: boolean;
+  members: UserInfo[];
+};
+
+export type Message = {
+  id: string;
+  content: string;
+  createdAt: string; // Fecha en formato ISO
+  sender: UserInfo;
+  conversationId: string;
+  isRead: boolean;
+};

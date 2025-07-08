@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware'; // Para guardar en AsyncStorage
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { queryClient } from '../lib/queryClient';
 
 interface AuthState {
   token: string | null;
@@ -23,7 +24,10 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       _hasHydrated: false,
       login: (token, user) => set({ token, user, isAuthenticated: true }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+      logout: () => {
+        set({ token: null, user: null, isAuthenticated: false })
+        queryClient.clear(); // Limpiar el cache de QueryClient
+      },
       setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {

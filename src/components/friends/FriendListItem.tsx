@@ -13,7 +13,7 @@ export default function FriendListItem({ friend }: Props) {
 
   const handleSendMessage = () => {
     // TODO: Implementar navegación a la pantalla de chat con este amigo
-    // Por ejemplo: router.push(`/chat/${friend.id}`);
+    router.push({ pathname: '/chat/[id]', params: { id: friend.id } });
     console.log(`Iniciar chat con ${friend.firstName}`);
   };
 
