@@ -79,6 +79,21 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Mensajes',
+          headerShown: false, // Ocultamos el header aquí porque el stack de chat ya tiene el suyo
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="profile" // Corresponde a app/(tabs)/profile.tsx
         options={{

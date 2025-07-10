@@ -83,6 +83,10 @@ export default function ProfileScreen() {
                            <ActionButton icon="people-outline" text="Amigos" href="/profile/friends" />
                            <ActionButton icon="heart-outline" text="Favoritos" href="/profile/favorites" />
                         </View>
+                        <View className="flex-row gap-3">
+                           <ActionButton icon="ticket-outline" text="Mis Entradas" href="/profile/tickets" />
+                           <ActionButton icon="pricetag-outline" text="Beneficios Usados" href="/profile/benefits-history" />
+                        </View>
                     </View>
 
                     {/* --- Sobre mí --- */}

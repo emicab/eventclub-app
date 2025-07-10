@@ -167,6 +167,7 @@ export type Conversation = {
 };
 
 export type Message = {
+  text: any;
   id: string;
   content: string;
   createdAt: string; // Fecha en formato ISO

@@ -8,6 +8,7 @@ import '../global.css'
 import { usePushNotifications } from '@/src/hooks/usePushNotifications';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { useInitializeCurrency } from '@/src/hooks/useInitializeCurrency';
+import { SocketProvider } from '@/src/context/SocketContext';
 
 
 export default function RootLayout() {
@@ -46,7 +47,9 @@ export default function RootLayout() {
   return (
     <ActionSheetProvider>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <SocketProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </SocketProvider>
       </QueryClientProvider>
     </ActionSheetProvider>
   );

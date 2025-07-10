@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import { UserProfile } from '@/src/types';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/src/constants/Colors';
+import { findOrCreateConversation } from '@/src/api/chat';
+import { useMutation } from '@tanstack/react-query';
 
 interface Props {
   friend: UserProfile;
@@ -11,9 +13,23 @@ interface Props {
 export default function FriendListItem({ friend }: Props) {
   const router = useRouter();
 
+  // Esta mutación se encarga de todo el flujo de iniciar un chat.
+  const { mutate: startChat, isPending } = useMutation({
+    mutationFn: () => findOrCreateConversation(friend.id),
+    onSuccess: (data) => {
+      // 2. Solo cuando la API responde con éxito, navegamos.
+      // 'data.id' aquí es el verdadero ID de la conversación.
+      router.push(`/chat/${data.id}`);
+    },
+    onError: (error) => {
+      console.error("Error al iniciar el chat:", error);
+      alert("No se pudo iniciar la conversación. Inténtalo de nuevo.");
+    }
+  });
+
   const handleSendMessage = () => {
     // TODO: Implementar navegación a la pantalla de chat con este amigo
-    router.push({ pathname: '/chat/[id]', params: { id: friend.id } });
+    startChat();
     console.log(`Iniciar chat con ${friend.firstName}`);
   };
 
