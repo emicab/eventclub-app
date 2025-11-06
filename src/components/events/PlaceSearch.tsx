@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Constants from 'expo-constants';
 
-const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_API_KEY;
+
+const GOOGLE_API_KEY = Constants.expoConfig?.extra?.apiKey
 
 export default function PlaceSearch({ onLocationSelected }: { onLocationSelected: (data: { name: string, lat: number, lng: number }) => void }) {
   const [query, setQuery] = useState('');

@@ -20,6 +20,7 @@ module.exports = {
         'glass-border': Colors.glass.border,
         card: '#e1e1e1',
         newBenef: Colors.newBenef,
+        error: Colors.error,
       },
     },
   },

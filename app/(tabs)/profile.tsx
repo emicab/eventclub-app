@@ -85,7 +85,7 @@ export default function ProfileScreen() {
                         </View>
                         <View className="flex-row gap-3">
                            <ActionButton icon="ticket-outline" text="Mis Entradas" href="/profile/tickets" />
-                           <ActionButton icon="pricetag-outline" text="Beneficios Usados" href="/profile/benefits-history" />
+                           <ActionButton icon="pricetag-outline" text="Mis Beneficios" href="/profile/claimed-benefits" />
                         </View>
                     </View>
 

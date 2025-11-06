@@ -2,24 +2,34 @@ import 'dotenv/config';
 
 export default {
   "expo": {
-    "name": "eventclub-app",
-    "slug": "eventclub-app",
-    "version": "1.0.0",
+    "name": "elbarrio-app",
+    "slug": "elbarrio-app",
+    "version": "0.5.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "eventclubapp",
+    "scheme": "elbarrioapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.elbarrioapp",
+      "config": {
+        "googleMapsApiKey": "AIzaSyAqfNQMmioNDzqoek6oOmKDVMv95-8FvFQ"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#00A0FF"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.eventclubapp"
+      "package": "com.anonymous.elbarrioapp",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAqfNQMmioNDzqoek6oOmKDVMv95-8FvFQ"
+        }
+      }
+
     },
     "web": {
       "bundler": "metro",
@@ -34,7 +44,7 @@ export default {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#00A0FF"
         }
       ],
       "expo-web-browser",

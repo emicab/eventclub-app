@@ -4,7 +4,10 @@
   # Which nixpkgs channel to use.
   channel = "stable-23.11"; # or "unstable"
   # Use https://search.nixos.org/packages to find packages
-  packages = [ pkgs.nodejs_21 ];
+  packages = [ 
+    pkgs.nodejs_21
+    pkgs.adoptopenjdk-bin
+    ];
   # Sets environment variables in the workspace
   env = { EXPO_USE_FAST_RESOLVER = 1; };
   idx = {
@@ -23,8 +26,8 @@
         android = ''
           echo -e "\033[1;33mWaiting for Android emulator to be ready...\033[0m"
           # Wait for the device connection command to finish
-          adb -s emulator-5554  wait-for-device install apk/eventclub_app.apk && \
-          npm start -- --tunnel --dev-client
+          adb -s emulator-5554  wait-for-device install apk/elbarrioapp.apk && \
+          npm start -- --tunnel --dev-client -c
         '';
       };
     };

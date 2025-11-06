@@ -1,4 +1,3 @@
-// En app/chat/[id].tsx
 import { useState, useEffect, useCallback } from 'react';
 import { Bubble, GiftedChat, IMessage, InputToolbar, Send } from 'react-native-gifted-chat';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';

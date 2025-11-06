@@ -51,7 +51,8 @@ export interface Benefit {
   isNew: boolean;
   isExclusive: boolean;
   pointCost?: number;
-
+  expiresAt?: string | number | Date;
+  isLocked?: boolean;
 }
 
 export type Channel = {
@@ -175,3 +176,18 @@ export type Message = {
   conversationId: string;
   isRead: boolean;
 };
+
+export type ClaimedBenefit = {
+  id: string; // El ID del reclamo en sí
+  status: 'AVAILABLE' | 'USED';
+  benefit: Benefit; // El beneficio original anidado
+  // Puedes añadir más campos como 'createdAt' si la API los devuelve
+};
+
+export type Company = {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  city: string;
+}

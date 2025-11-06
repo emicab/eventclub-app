@@ -1,121 +1,153 @@
-// --- src/components/shared/BenefitCard.tsx (Rediseñado) ---
-import { TouchableOpacity, View, Text, Image, Share, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, ActionSheetIOS, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { BlurView } from 'expo-blur';
-import { Benefit } from '@/src/types'; // Asegúrate de que tu tipo Benefit incluya los nuevos campos
+import { Benefit } from '@/src/types';
 import Colors from '@/src/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/src/lib/axios';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 type BenefitCardProps = {
-  benefit: Benefit;
+  benefit: Benefit & { isLocked?: boolean }; // Añadimos la propiedad isLocked
+  userPoints?: number | undefined;
 };
 
-const DEFAULT_LOGO = 'https://placehold.co/50/1E1E1E/F0F6FC?text=Logo';
+const deleteBenefit = async (id: string) => {
+  await apiClient.delete(`/api/admin/benefits/${id}`);
+};
 
-export default function BenefitCard({ benefit }: BenefitCardProps) {
+const formatExpirationDate = (dateString?: string | null): string | null => {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    // Formato ejemplo: "30 de Octubre"
+    return format(date, "d 'de' MMMM", { locale: es }); 
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return "Fecha inválida"; // O devolver null
+  }
+};
+
+export default function BenefitCard({ benefit, userPoints}: BenefitCardProps ) {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
-  const handlePress = () => {
-    if (benefit.isUsed) return;
-    router.push(`/benefits/${benefit.id}`);
-  };
+  const needsMorePoints = !!benefit.pointCost && (userPoints ?? 0) < benefit.pointCost;
+  const isLocked = !!(benefit.isLocked || needsMorePoints);
+  
 
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        message: `¡Mirá este beneficio exclusivo de EventClub! "${benefit.title}" en ${benefit.company.name}. Descargá la app y unite al club.`,
-        // url: 'https://eventclub.app' // URL de tu app
-      });
-    } catch (error: any) {
-      Alert.alert(error.message);
+  const expirationText = formatExpirationDate(benefit.expiresAt);
+  
+  const { mutate: performDelete, isPending: isDeleting } = useMutation({
+    mutationFn: deleteBenefit,
+    onSuccess: () => {
+      Alert.alert('Éxito', 'El beneficio ha sido eliminado.');
+      queryClient.invalidateQueries({ queryKey: ['benefits'] });
+    },
+    onError: (err: any) => {
+      Alert.alert('Error', err.response?.data?.message || 'No se pudo eliminar el beneficio.');
+    },
+  });
+
+  // --- Lógica del Menú de Opciones ---
+  const showAdminOptions = () => {
+    // Confirmación simple antes de eliminar
+    const confirmDelete = () => {
+      Alert.alert(
+        'Eliminar Beneficio',
+        `¿Estás seguro de que quieres eliminar "${benefit.title}"? Esta acción no se puede deshacer.`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Eliminar', style: 'destructive', onPress: () => performDelete(benefit.id) },
+        ]
+      );
+    };
+
+    // Usamos ActionSheet en iOS y un Alert simple en Android
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancelar', 'Editar Beneficio', 'Eliminar Beneficio'],
+          destructiveButtonIndex: 2,
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            router.push(`/benefits/edit/${benefit.id}`); // Navegar a la pantalla de edición
+          } else if (buttonIndex === 2) {
+            confirmDelete();
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        'Opciones de Administrador',
+        `¿Qué deseas hacer con "${benefit.title}"?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Editar', onPress: () => router.push(`/benefits/edit/${benefit.id}`) },
+          { text: 'Eliminar', style: 'destructive', onPress: confirmDelete },
+        ]
+      );
     }
   };
-
   return (
-    <TouchableOpacity
-      onPress={handlePress}
-      // disabled={benefit.isUsed}
-      className={`flex-1 m-2 ${benefit.isUsed ? 'opacity-50' : ''}`}
+    <TouchableOpacity 
+      onPress={() => router.push(`/benefits/${benefit.id}`)} 
+      disabled={isLocked} // Deshabilitamos el toque si está bloqueado
+      className={`w-full bg-white/5 border border-white/20 rounded-full py-4 px-6 my-2 relative`}
     >
-      <View className="relative w-full rounded-xl overflow-hidden">
-        <BlurView
-          intensity={80}
-          tint="dark"
-          style={{
-            borderColor: Colors.glass.border,
-            backgroundColor: Colors.glass.background,
-            borderWidth: 1,
-            height: 110,
-            padding: 10,
-            margin: 6,
-            borderRadius: 10,
-            position: 'relative'
-          }}
-          className="flex-1 p-3 justify-between relative"
-        >
-          {/* Cabecera con Logo, Nombre y Botón de Share */}
-          <View className="flex-row justify-between items-start">
-            <View className="flex-row items-start flex-1">
-              <Image source={{ uri: benefit.company.logoUrl || DEFAULT_LOGO }} style={{ width: 50, height: 50 }} className="w-8 h-8 bg-white rounded-full p-2" />
-              <View className='ml-4 justify-around'>
-                <Text className="text-primary text-xl mb-4 " style={{ fontFamily: 'Inter_700Bold' }} numberOfLines={1}>
-                  {benefit.company.name}
-                </Text>
-                <View>
-                  <Text className="text-white text-xl" style={{ fontFamily: 'Inter_700Regular' }} numberOfLines={3}>
-                    {benefit.title}
-                  </Text>
-                  <Text className="text-accent text-lg" style={{ fontFamily: 'Inter_700Bold' }}>
-                    {/* @ts-ignore */}
-                    {benefit?.pointCost > 0 ? `Canjear por ${benefit.pointCost} puntos` : 'Gratis'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View className='flex-row gap-4 items-center justify-center h-10'>
-              {/* Pie con Etiquetas de Exclusividad */}
-              
-                {benefit.isNew && <Tag text="NUEVO" color="bg-newBenef" />}
-                {benefit.isExclusive && <Tag text="EXCLUSIVO" color="bg-accent" />}
-              
-              <TouchableOpacity onPress={handleShare} className="">
-                <Ionicons name="share-social-outline" size={20} color={Colors.accent} />
-              </TouchableOpacity>
-            </View>
+      <View className={`flex-row items-center justify-between ${isLocked ? 'opacity-30' : ''} ${user?.role === 'ADMIN' ? 'mr-10' : ''}`}>
+        <View className=" px-4">
+          {benefit.company.logoUrl ? (
+            <Image
+              source={{ uri: benefit.company.logoUrl }}
+              className="w-20 h-20"
+            />
+          ) : (
+            <Text className="text-primary  text-xl" style={{ fontFamily: 'Inter_700Bold' }}>{benefit.company.name}</Text>
+          )}
+        </View>
+        <View className="h-12 w-px bg-white/20 mx-4" />
+          <Text className="text-primary font-medium text-xl max-w-30 ">{benefit.title}</Text>
+        <View className="items-center">
+          <View className="bg-accent rounded-full px-4 py-2 mx-4">
+            <Text className="text-white font-bold" style={{ fontFamily: 'Inter_700Bold' }}>
+              {benefit.pointCost ? `Canjear ${benefit.pointCost} Pts` : `Canjear gratis`}
+            </Text>
           </View>
-          {/* Overlay de "Agotado" si ya fue usado */}
-          <ExhaustedOverlay visible={benefit.isUsed} />
-
-        </BlurView>
+          {expirationText && <Text className="text-secondary text-xs mt-2">Valido hasta el {expirationText}</Text>}
+        </View>
       </View>
+
+      {user?.role === 'ADMIN' && (
+        <TouchableOpacity
+          onPress={showAdminOptions}
+          className="absolute top-8 right-4 p-2 bg-black/30 rounded-full"
+        >
+          <Ionicons name="ellipsis-vertical" size={20} color={Colors.text.primary} />
+        </TouchableOpacity>
+      )}
+
+      {/* --- OVERLAY DE BLOQUEO CON BLUR --- */}
+      {isLocked && (
+        <View className="absolute inset-0">
+            <BlurView
+              intensity={25}
+              tint="dark"
+              className="absolute inset-0 rounded-2xl flex-col justify-center items-center p-2"
+            >
+              <Ionicons name="lock-closed" size={24} color={Colors.text.secondary} />
+              <Text className="text-secondary text-center font-bold mt-1">
+                {needsMorePoints ? `Necesitas ${benefit.pointCost} puntos` : 'Gana más puntos para desbloquear'}
+              </Text>
+            </BlurView>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
-
-// Componente auxiliar para las etiquetas
-const Tag = ({ text, color }: { text: string; color: string }) => (
-  <View className={`px-3 py-2 rounded-full ${color}`}>
-    <Text className="text-white text-sm leading-6 font-bold">{text}</Text>
-  </View>
-);
-
-const ExhaustedOverlay = ({ visible = false }: { visible: boolean }) => {
-  return (
-    <View
-      className={`absolute inset-0 justify-center items-center rounded-2xl bg-black/20 ${
-        visible ? 'opacity-100' : 'opacity-0'
-      }`}
-      pointerEvents={visible ? 'auto' : 'none'} // para que no bloquee clics si está invisible
-    >
-      <Text
-        className="text-white text-xl font-bold px-4 py-2 rounded-xl bg-background backdrop-blur-sm rotate-12"
-        style={{
-          fontFamily: 'Inter_700Bold',
-          transform: [{ rotate: '-20deg' }],
-        }}
-      >
-        AGOTADO
-      </Text>
-    </View>
-  );
-};

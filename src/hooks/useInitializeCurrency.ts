@@ -55,7 +55,7 @@ export const useInitializeCurrency = () => {
         }
         // Plan B: Fallback a la configuración del dispositivo
         if (!detectedCurrency) {
-          const deviceCurrency = Localization.currency;
+          const deviceCurrency = Localization.currencyCode;
           if (deviceCurrency && rates[deviceCurrency]) {
             detectedCurrency = deviceCurrency;
           }

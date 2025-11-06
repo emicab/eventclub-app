@@ -78,7 +78,7 @@ export default function CreateEventScreen() {
   });
 
   const handleCreate = () => {
-    if (!title || !date || !companyId || !latitude || !longitude) {
+    if (!title || !date || !companyId ) {
       return Alert.alert('Error', 'Por favor, completa el título, fecha, compañía y ubicación.');
     }
 
@@ -87,8 +87,8 @@ export default function CreateEventScreen() {
     formData.append('description', description);
     formData.append('date', date.toISOString());
     formData.append('companyId', companyId);
-    formData.append('latitude', latitude.toString());
-    formData.append('longitude', longitude.toString());
+    // formData.append('latitude', latitude.toString());
+    // formData.append('longitude', longitude.toString());
     formData.append('address', address);
     formData.append('place', place);
     formData.append('city', city);
