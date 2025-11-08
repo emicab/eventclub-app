@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/src/constants/Colors';
 import { findOrCreateConversation } from '@/src/api/chat';
 import { useMutation } from '@tanstack/react-query';
+import React from 'react';
 
 interface Props {
   friend: UserProfile;

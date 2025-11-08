@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import VerifyCheckIcon from '../ui/VerifyCheckIcon';
 import { useState } from 'react';
 import ImageView from "react-native-image-viewing";
+import React from 'react';
 
 // Definimos los tipos para un post, coincidiendo con tu API
 export type UserInfo = {
@@ -73,7 +74,9 @@ export default function PostCardComment({ post }: PostCardProps) {
     onSuccess: () => {
       // Invalidamos la query para que se refresque inmediatamente
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
     },
+    
   });
 
   return (

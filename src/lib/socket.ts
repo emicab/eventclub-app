@@ -1,4 +1,10 @@
 import { io } from 'socket.io-client';
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+export const socket = io(API_URL, {
+  path: '/socket.io',
+  transports: ['websocket'],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  secure: true,
+});
 
-// Creamos y exportamos una única instancia del socket para toda la app.
-export const socket = io(process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001');

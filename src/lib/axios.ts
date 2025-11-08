@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 const apiClient = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL, // Asegúrate de tener esta variable en tu .env
+  // baseURL: 'https://reposedly-uncurtained-dorothy.ngrok-free.dev',
   headers: {
     'Content-Type': 'application/json',
   },

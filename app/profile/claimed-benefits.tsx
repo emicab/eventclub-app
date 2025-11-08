@@ -1,6 +1,5 @@
-
 import {
-    SafeAreaView, Text, View, FlatList, ActivityIndicator, TouchableOpacity, Image
+    SafeAreaView, Text, View, FlatList, ActivityIndicator, TouchableOpacity, Image, RefreshControl
   } from 'react-native';
   import { useQuery } from '@tanstack/react-query';
   import apiClient from '@/src/lib/axios';
@@ -9,35 +8,33 @@ import {
   import { Benefit } from '@/src/types';
   import { Ionicons } from '@expo/vector-icons';
   
-  // Función para llamar al nuevo endpoint
-  const fetchMyClaimedBenefits = async (): Promise<Benefit[]> => {
+  // Se espera que la API devuelva una lista de beneficios con propiedades adicionales como claimedId y status
+  const fetchMyClaimedBenefits = async (): Promise<any[]> => {
     const { data } = await apiClient.get('/api/benefits/my-claimed');
     return data;
   };
   
-  // Componente para renderizar cada beneficio reclamado
   const ClaimedBenefitCard = ({ item }: { item: Benefit }) => {
     const router = useRouter();
   
-    // Esta función nos llevará a la pantalla donde se generará el QR
     const handleUseBenefit = () => {
-      // Redirigimos a una nueva pantalla (que crearemos después) para generar el QR
-      // Pasamos el ID del beneficio y el ID del *reclamo*
+      console.log('item:: ', item)
+
       // @ts-ignore
       router.push(`/profile/use-benefit/${item.claimedId}`);
     };
-
-    console.log(item)
   
     return (
       <View className="bg-card rounded-lg p-4 mb-4 shadow-md">
         <View className="flex-row items-center">
           <Image 
+            // @ts-ignore
             source={{ uri: item.company.logoUrl || 'https://placehold.co/100' }}
             className="w-16 h-16 rounded-full bg-slate-200"
           />
           <View className="flex-1 ml-4">
             <Text className="text-dark font-bold text-lg">{item.title}</Text>
+            {/* @ts-ignore */}
             <Text className="text-secondary mt-1">en {item.company.name}</Text>
           </View>
         </View>
@@ -54,12 +51,18 @@ import {
   
   
   export default function ClaimedBenefitsScreen() {
-    const { data: claimedBenefits, isLoading, isError } = useQuery({
+    const { data: claimedBenefits, isLoading, isError, refetch } = useQuery({
       queryKey: ['myClaimedBenefits'],
       queryFn: fetchMyClaimedBenefits,
       refetchOnWindowFocus: true,
     });
   
+    // --- SOLUCIÓN: Filtramos los beneficios para mostrar solo los que están listos para usar ---
+    const availableBenefits = claimedBenefits?.filter(
+      (benefit: any) => benefit.status === 'AVAILABLE'
+    );
+    
+    console.log('benefit status:: ', claimedBenefits)
     return (
       <SafeAreaView className="flex-1 bg-background pt-10 my-safe">
         <Stack.Screen options={{ title: "Mis Beneficios", headerTintColor: Colors.text.primary, headerStyle:{backgroundColor: Colors.background} }} />
@@ -75,17 +78,21 @@ import {
           </Text>
         ) : (
           <FlatList
-            data={claimedBenefits}
+            data={availableBenefits} // Usamos la lista filtrada
             renderItem={({ item }) => <ClaimedBenefitCard item={item} />}
-            // @ts-ignore
-            keyExtractor={(item) => item.claimedId}
+            // Nos aseguramos que la key sea un string único para evitar problemas de renderizado
+            keyExtractor={(item) => item.claimedId.toString()}
             contentContainerStyle={{ paddingHorizontal: 24 }}
             ListEmptyComponent={
               <View className="flex-1 justify-center items-center mt-24">
+                  {/* Mensaje actualizado para mayor claridad */}
                   <Text className="text-secondary text-center">
-                  Aún no has reclamado ningún beneficio.
+                    No tienes beneficios listos para usar.
                   </Text>
               </View>
+            }
+            refreshControl={
+                <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={Colors.accent} />
             }
           />
         )}

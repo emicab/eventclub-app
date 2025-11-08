@@ -57,7 +57,7 @@ export default {
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f0db90d4-15b6-4966-9d95-caa3c2d2e818"
+        "projectId": "69df58f8-08db-4251-9615-3c5c5b4debcb"
       },
       apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://api.eventclub.app",
       apiKey: process.env.EXPO_PUBLIC_API_KEY,

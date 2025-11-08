@@ -7,6 +7,7 @@ import Colors from "@/src/constants/Colors";
 import { Event } from "@/src/types";
 import { useToggleFavorite } from "@/src/hooks/useFavorites";
 import { useCurrencyStore } from "@/src/store/useCurrencyStore";
+import React from "react";
 
 // La prop 'event' ahora es la única necesaria, el resto viene del store.
 interface Props {

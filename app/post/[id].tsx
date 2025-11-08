@@ -3,9 +3,9 @@ import {
     SafeAreaView, Text, View, FlatList, TextInput, TouchableOpacity,
     KeyboardAvoidingView, Platform, ActivityIndicator, Image
   } from 'react-native';
-  import { useLocalSearchParams, Stack } from 'expo-router';
+  import { useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
   import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-  import { useState, useEffect } from 'react';
+  import { useState, useEffect, useCallback } from 'react';
   import apiClient from '@/src/lib/axios';
   import PostCardComment, { Post } from '@/src/components/shared/PostCardComment';
   import Colors from '@/src/constants/Colors';
@@ -93,12 +93,16 @@ import {
       queryKey: ['postDetails', postId],
       queryFn: () => fetchPostDetails(postId as string),
       enabled: !!postId,
+      refetchOnWindowFocus: true,
+      
     });
   
     const { data: comments, isLoading: isLoadingComments } = useQuery({
       queryKey: ['comments', postId],
       queryFn: () => fetchComments(postId as string),
       enabled: !!postId,
+      // refetchOnWindowFocus: true,
+      // refetchInterval: 5000, // Actualiza cada 5 segundos
     });
   
     const { mutate: handleAddComment, isPending: isPostingComment } = useMutation({

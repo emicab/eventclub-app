@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { useAcceptFriendRequest, useRemoveFriendship } from '@/src/hooks/useFriends';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/src/constants/Colors';
+import React from 'react';
 
 export default function FriendRequestItem({ request }: { request: any }) {
   const { mutate: acceptRequest, isPending: isAccepting } = useAcceptFriendRequest();

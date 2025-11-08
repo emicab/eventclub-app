@@ -1,59 +1,52 @@
-// En src/context/SocketContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useAuthStore } from '../store/useAuthStore';
-import Constants from 'expo-constants';
-import { queryClient } from '../lib/queryClient';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
-const SocketContext = createContext<Socket | null>(null);
+// 🧠 URL de tu backend (ngrok)
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// Este es el hook que nuestros componentes usarán para acceder al socket.
-export const useSocket = () => {
-    return useContext(SocketContext);
-};
+const socket = io(API_URL, {
+  transports: ['websocket'],
+  reconnection: true,
+  reconnectionAttempts: 10,
+  secure: true,
+  rejectUnauthorized: false,
+});
+
+const SocketContext = createContext<{ socket: Socket | null }>({ socket: null });
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-    const [socket, setSocket] = useState<Socket | null>(null);
-    const { token } = useAuthStore(); // Obtenemos el token del usuario logueado
+  const [isConnected, setIsConnected] = useState(false);
+  const { token } = useAuthStore();
 
-    useEffect(() => {
-        if (token) {
-            // Si tenemos un token, creamos y conectamos el socket.
-            const newSocket = io(Constants.expoConfig?.extra?.apiUrl as string);
+  useEffect(() => {
+    socket.on('connect', () => {
+      setIsConnected(true);
+      console.log('✅ Socket conectado:', socket.id);
+      if (token) socket.emit('authenticate', token);
+    });
 
-            newSocket.on('connect', () => {
-                // Una vez conectado, nos autenticamos.
-                newSocket.emit('authenticate', token);
-            });
+    socket.on('connect_error', (err) => {
+      console.log('❌ Error de conexión:', err.message);
+    });
 
-            newSocket.on('friendship_updated', () => {
-                console.log('✅ Notificación de amistad recibida. Invalidando queries...');
-                // Invalidamos todas las queries relacionadas con amigos.
-                // Esto forzará a la app a obtener los datos más recientes.
-                queryClient.invalidateQueries({ queryKey: ['friends'] });
-                queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
-                // También invalidamos los estados de amistad de perfiles individuales.
-                queryClient.invalidateQueries({ queryKey: ['friendshipStatus'] });
-            });
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+      console.log('🔴 Socket desconectado');
+    });
 
-            setSocket(newSocket);
+    return () => {
+      socket.off('connect');
+      socket.off('connect_error');
+      socket.off('disconnect');
+    };
+  }, [token]);
 
-            // Al desmontar el provider (ej. al hacer logout), nos desconectamos.
-            return () => {
-                newSocket.disconnect();
-            };
-        } else {
-            // Si no hay token (logout), nos aseguramos de que el socket esté desconectado y nulo.
-            if (socket) {
-                socket.disconnect();
-                setSocket(null);
-            }
-        }
-    }, [token]); // Este efecto se re-ejecuta cada vez que el token cambia (login/logout)
-
-    return (
-        <SocketContext.Provider value={socket}>
-            {children}
-        </SocketContext.Provider>
-    );
+  return (
+    <SocketContext.Provider value={{ socket }}>
+      {children}
+    </SocketContext.Provider>
+  );
 };
+
+export const useSocket = () => useContext(SocketContext);

@@ -106,7 +106,7 @@ export default function BenefitsScreen() {
               className='mt-2 flex-row items-center bg-white/10 px-3 py-1.5 rounded-full'
             >
                 <Ionicons name="receipt-outline" size={16} color={Colors.accent} />
-                <Text className='text-accent text-xs font-bold ml-1.5'>Mis Vouchers</Text>
+                <Text className='text-accent text-xs font-bold ml-1.5'>Mis Beneficios</Text>
             </TouchableOpacity>
             {/* --- FIN NUEVO BOTÓN --- */}
           </View>

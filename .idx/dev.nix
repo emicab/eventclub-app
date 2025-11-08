@@ -26,7 +26,7 @@
         android = ''
           echo -e "\033[1;33mWaiting for Android emulator to be ready...\033[0m"
           # Wait for the device connection command to finish
-          adb -s emulator-5554  wait-for-device install apk/elbarrioapp.apk && \
+          # adb -s emulator-5554  wait-for-device install apk/elbarrioapp.apk && \
           npm start -- --tunnel --dev-client -c
         '';
       };

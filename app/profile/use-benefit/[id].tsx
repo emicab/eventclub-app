@@ -1,3 +1,4 @@
+//app/profile/use-benefit/[id].tsx
 import {
   SafeAreaView, Text, View, ActivityIndicator, Alert, TouchableOpacity, Image
 } from 'react-native';
@@ -53,16 +54,25 @@ export default function UseBenefitScreen() {
       setExpiresAt(new Date(data.expiresAt));
     },
     onError: (err: any) => {
-      Alert.alert('Error', err.response?.data?.message || 'No se pudo generar el código QR.');
-    },
+      // console.error('Error generando QR:', err?.response?.data);
+      setIsExpired(true); // ⚠️ marca como expirado para cortar el loop
+      // Alert.alert('Error', err.response?.data?.message || 'No se pudo generar el código QR.');
+    },    
   });
 
   // Genera el QR automáticamente al cargar la pantalla si está disponible
   useEffect(() => {
-      if(claimedBenefit && claimedBenefit.status === 'AVAILABLE' && !qrContent && !isGenerating) {
-          handleGenerateQr();
-      }
-  }, [claimedBenefit, qrContent, isGenerating]);
+    if (
+      claimedBenefit &&
+      claimedBenefit.status === 'AVAILABLE' &&
+      !qrContent &&
+      !isGenerating &&
+      !isExpired // evita loop si expiró
+    ) {
+      handleGenerateQr();
+    }
+  }, [claimedBenefit?.status, qrContent, isGenerating, isExpired]);
+  
   
 
   // Lógica del Temporizador
@@ -156,7 +166,7 @@ export default function UseBenefitScreen() {
   // 2. Si el código llega aquí, el estado solo puede ser 'AVAILABLE'.
   //    Mostramos la pantalla principal de canje.
   const benefit = claimedBenefit.benefit;
-
+  console.log('benefit:: ', benefit)
   return (
     <SafeAreaView className="flex-1 my-safe bg-background">
       <Stack.Screen options={{ title: benefit.title, headerTintColor: Colors.text.primary, headerStyle: { backgroundColor: Colors.background } }} />

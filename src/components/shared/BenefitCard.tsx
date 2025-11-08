@@ -13,6 +13,7 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 type BenefitCardProps = {
   benefit: Benefit & { isLocked?: boolean }; // Añadimos la propiedad isLocked
   userPoints?: number | undefined;
+
 };
 
 const deleteBenefit = async (id: string) => {
@@ -39,7 +40,7 @@ export default function BenefitCard({ benefit, userPoints}: BenefitCardProps ) {
   const needsMorePoints = !!benefit.pointCost && (userPoints ?? 0) < benefit.pointCost;
   const isLocked = !!(benefit.isLocked || needsMorePoints);
   
-
+  // @ts-ignore
   const expirationText = formatExpirationDate(benefit.expiresAt);
   
   const { mutate: performDelete, isPending: isDeleting } = useMutation({
@@ -102,21 +103,24 @@ export default function BenefitCard({ benefit, userPoints}: BenefitCardProps ) {
       className={`w-full bg-white/5 border border-white/20 rounded-full py-4 px-6 my-2 relative`}
     >
       <View className={`flex-row items-center justify-between ${isLocked ? 'opacity-30' : ''} ${user?.role === 'ADMIN' ? 'mr-10' : ''}`}>
-        <View className=" px-4">
+        <View className="ml-4">
           {benefit.company.logoUrl ? (
             <Image
               source={{ uri: benefit.company.logoUrl }}
-              className="w-20 h-20"
+              className=""
+              
+              width={100}
+              height={80}
             />
           ) : (
-            <Text className="text-primary  text-xl" style={{ fontFamily: 'Inter_700Bold' }}>{benefit.company.name}</Text>
+            <Text className="text-primary text-lg" style={{ fontFamily: 'Inter_700Bold' }}>{benefit.company.name}</Text>
           )}
         </View>
         <View className="h-12 w-px bg-white/20 mx-4" />
-          <Text className="text-primary font-medium text-xl max-w-30 ">{benefit.title}</Text>
         <View className="items-center">
+          <Text className="text-primary font-medium text-sm mb-2">{benefit.title}</Text>
           <View className="bg-accent rounded-full px-4 py-2 mx-4">
-            <Text className="text-white font-bold" style={{ fontFamily: 'Inter_700Bold' }}>
+            <Text className="text-white font-medium text-sm" style={{ fontFamily: 'Inter_700Bold' }}>
               {benefit.pointCost ? `Canjear ${benefit.pointCost} Pts` : `Canjear gratis`}
             </Text>
           </View>
@@ -135,11 +139,11 @@ export default function BenefitCard({ benefit, userPoints}: BenefitCardProps ) {
 
       {/* --- OVERLAY DE BLOQUEO CON BLUR --- */}
       {isLocked && (
-        <View className="absolute inset-0">
+        <View className="absolute inset-0 rounded-3xl">
             <BlurView
-              intensity={25}
+              intensity={10}
               tint="dark"
-              className="absolute inset-0 rounded-2xl flex-col justify-center items-center p-2"
+              className="absolute rounded-2xl inset-0 flex-col justify-center items-center p-2"
             >
               <Ionicons name="lock-closed" size={24} color={Colors.text.secondary} />
               <Text className="text-secondary text-center font-bold mt-1">

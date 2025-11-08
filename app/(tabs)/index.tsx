@@ -2,6 +2,7 @@ import EventCard, { Event } from '@/src/components/shared/EventCard';
 import apiClient from '@/src/lib/axios';
 import { UserProfile } from '@/src/types';
 import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 import { Image, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 // Creamos un array de datos de ejemplo para renderizar
@@ -46,7 +47,7 @@ export default function FeedScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1 mt-safe-offset-0 bg-background pt-6 pb-24">
+    <SafeAreaView className="flex-1 pt-safe bg-background pb-24" >
       <ScrollView>
         <View className="px-6">
           <View className='flex-row justify-between items-center mb-6'>

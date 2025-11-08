@@ -18,9 +18,8 @@ import {
 } from 'react-native';
 
 export default function CommunityScreen() {
-  useSocketListeners();
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>();
-
+  
   // 1. Query para obtener la lista de canales desde la API
   const { data: channels, isLoading: isLoadingChannels } = useQuery({
     queryKey: ['channels'],
@@ -65,7 +64,7 @@ export default function CommunityScreen() {
   });
 
   const ListHeader = () => (
-    <View className="px-6 mb-6">
+    <View className="px-6 mb-6 mt-safe">
       <Text className="text-primary text-3xl" style={{ fontFamily: 'Inter_700Bold' }}>Comunidad</Text>
       <Text className="text-secondary mt-1 mb-6" style={{ fontFamily: 'Inter_400Regular' }}>Conéctate, comparte y descubre.</Text>
 
