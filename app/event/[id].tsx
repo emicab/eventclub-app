@@ -165,6 +165,7 @@ export default function EventDetailScreen() {
                 <View className="mt-8 px-4">
                     <Text className="text-primary text-xl mb-4" style={{ fontFamily: 'Inter_700Bold' }}>Entradas</Text>
                     <View className="gap-4">
+                        {/* @ts-ignore */}
                         {event.tickets?.map(ticket => {
                             
                             // Usamos el helper que respeta la moneda original del ticket.
@@ -273,7 +274,7 @@ export default function EventDetailScreen() {
                         disabled={isPending}
                         className="bg-accent px-8 py-4 rounded-full flex-row justify-between items-center"
                     >
-                        {isPending ? <ActivityIndicator color={Colors.background} /> : (
+                        { isPending ? <ActivityIndicator color={ Colors.background } /> : (
                             <>
                                 <Text className="text-background font-bold text-base">Pagar</Text>
                                 {/* ✅ CORRECCIÓN FINAL: Usar el valor y moneda originales para el total */}
