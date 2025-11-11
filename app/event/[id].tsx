@@ -13,6 +13,48 @@ import MapView, { Marker } from 'react-native-maps';
 import { useState } from 'react';
 import { useCurrencyStore } from '@/src/store/useCurrencyStore';
 
+
+// --- HELPERS ---
+
+// Este helper NO aplica conversión; solo formatea un monto y su moneda
+const formatOriginalPrice = (amountInCents: number, currency: string) => {
+    const amount = amountInCents / 100;
+    try {
+        // Usamos 'undefined' para la localización y que tome la del dispositivo
+        return new Intl.NumberFormat(undefined, {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: 2,
+        }).format(amount);
+    } catch {
+        return `${currency} ${amount.toFixed(2)}`;
+    }
+};
+
+// Este helper (anteriormente usado para el footer) ya no es necesario para el total, 
+// pero se mantiene si se usa en otro lugar de la UI que requiera la moneda preferida del usuario.
+const useCurrencyFormatter = () => {
+    const { displayCurrency, getRate } = useCurrencyStore();
+
+    const formatPrice = (amountInUSD: number) => {
+        const rate = getRate(displayCurrency);
+        const converted = amountInUSD * rate;
+
+        try {
+            return new Intl.NumberFormat(undefined, {
+                style: 'currency',
+                currency: displayCurrency,
+                minimumFractionDigits: 2, 
+            }).format(converted);
+        } catch {
+            return `${displayCurrency} ${converted.toFixed(2)}`;
+        }
+    };
+    return { formatPrice };
+};
+
+
+// --- FETCHERS ---
 const fetchEventDetails = async (eventId: string): Promise<Event> => {
     const { data } = await apiClient.get(`/api/events/${eventId}`);
     return data;
@@ -24,7 +66,7 @@ const createOrder = async (data: { ticketTypeId: string; quantity: number }) => 
 };
 
 
-
+// --- COMPONENTE PRINCIPAL ---
 export default function EventDetailScreen() {
     const { id: eventId } = useLocalSearchParams();
     const router = useRouter();
@@ -33,7 +75,8 @@ export default function EventDetailScreen() {
     const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
     const [quantity, setQuantity] = useState(1);
 
-    const { displayCurrency, rates } = useCurrencyStore();
+    const { displayCurrency, rates, getRate } = useCurrencyStore();
+    const { formatPrice } = useCurrencyFormatter(); 
 
     const { data: event, isLoading } = useQuery({
         queryKey: ['eventDetails', eventId],
@@ -87,9 +130,14 @@ export default function EventDetailScreen() {
         weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     });
 
-    const totalInUSD = selectedTicket ? ((selectedTicket.priceInCents / 100) / (rates[selectedTicket.currency] ?? 1)) * quantity : 0;
-    const totalDisplayPrice = (totalInUSD * (rates[displayCurrency] ?? 1)).toFixed(2);
+    // 1. ✅ LÓGICA CORREGIDA: Calcular el total en la moneda ORIGINAL del ticket (en cents)
+    const totalOriginalPriceInCents = (selectedTicket?.priceInCents ?? 0) * quantity;
+    // Si necesitas el valor en decimales sin formatear: const totalOriginalPrice = totalOriginalPriceInCents / 100;
     
+    // Las siguientes variables ya no se usan para el total, pero se dejan en caso de ser necesarias en otra parte:
+    // const priceInCents = selectedTicket?.priceInCents ?? 0;
+    // const ticketCurrencyRate = rates[selectedTicket?.currency ?? 'USD'] ?? 1;
+    // const totalInUSD = (priceInCents / 100) / ticketCurrencyRate * quantity;
 
     const fullName = `${event.organizer?.firstName || ''} ${event.organizer?.lastName || ''}`;
     const avatarUrl = event.company?.logoUrl;
@@ -119,10 +167,9 @@ export default function EventDetailScreen() {
                     <View className="gap-4">
                         {event.tickets?.map(ticket => {
                             
-                            const ticketPriceInUSD = (ticket.priceInCents / 100) / (rates[ticket.currency] ?? 1);
-                            const ticketDisplayPrice = (ticketPriceInUSD * (rates[displayCurrency] ?? 1)).toFixed(2);
+                            // Usamos el helper que respeta la moneda original del ticket.
+                            const formattedOriginalPrice = formatOriginalPrice(ticket.priceInCents, ticket.currency);
                             
-
                             return (
                                 <TouchableOpacity
                                     key={ticket.id}
@@ -134,8 +181,8 @@ export default function EventDetailScreen() {
                                 >
                                     <View className="flex-row justify-between items-center">
                                         <Text className="text-accent font-bold flex-1">{ticket.name}</Text>
-                                        {/* 5. Mostramos el precio convertido con la moneda correcta */}
-                                        <Text className="text-accent font-bold">{displayCurrency} {ticketDisplayPrice}</Text>
+                                        {/* Muestra el precio formateado en ARS $... */}
+                                        <Text className="text-accent font-bold">{formattedOriginalPrice}</Text>
                                     </View>
                                 </TouchableOpacity>
                             );
@@ -143,7 +190,8 @@ export default function EventDetailScreen() {
                     </View>
                 </View>
 
-                {/* --- Contenido del Evento --- */}
+                {/* --- Contenido del Evento (omitiendo por brevedad) --- */}
+                {/* ... */}
                 <View className="p-6">
                     <Text className="text-primary text-3xl uppercase" style={{ fontFamily: 'Inter_700Bold' }}>{event.title}</Text>
                     <Text className="text-accent font-semibold text-lg mt-1 uppercase">{formattedDate}</Text>
@@ -228,7 +276,10 @@ export default function EventDetailScreen() {
                         {isPending ? <ActivityIndicator color={Colors.background} /> : (
                             <>
                                 <Text className="text-background font-bold text-base">Pagar</Text>
-                                <Text className="text-background font-bold text-base">{displayCurrency} {totalDisplayPrice}</Text>
+                                {/* ✅ CORRECCIÓN FINAL: Usar el valor y moneda originales para el total */}
+                                <Text className="text-background font-bold text-base">
+                                    {formatOriginalPrice(totalOriginalPriceInCents, selectedTicket.currency)}
+                                </Text>
                             </>
                         )}
                     </TouchableOpacity>

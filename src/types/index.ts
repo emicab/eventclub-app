@@ -92,6 +92,7 @@ export type Post = {
     comments: number;
   };
   createdAt: string; // Recibimos la fecha como un string ISO
+  event?: Event
 };
 
 export type Event = {
@@ -127,7 +128,8 @@ export type TicketType = {
   name: string;
   price: number;
   quantity: number;
-  event: Event,
+  event: Event;
+  currency: string
 };
 
 export type Ticket = {

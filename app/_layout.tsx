@@ -20,6 +20,7 @@ export default function RootLayout() {
     Inter_700Bold,
   });
   useInitializeCurrency();
+  usePushNotifications();
 
   useEffect(() => {
     if (!fontsLoaded || fontError || !_hasHydrated) return;

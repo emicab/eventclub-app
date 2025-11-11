@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import Constants from 'expo-constants';
-
-
-const GOOGLE_API_KEY = Constants.expoConfig?.extra?.apiKey
 
 export default function PlaceSearch({ onLocationSelected }: { onLocationSelected: (data: { name: string, lat: number, lng: number }) => void }) {
   const [query, setQuery] = useState('');
@@ -23,41 +19,34 @@ export default function PlaceSearch({ onLocationSelected }: { onLocationSelected
   }, [query]);
 
   const fetchSuggestions = async (input: string) => {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_API_KEY}&language=es&types=establishment`;
-      const res = await fetch(url);
-      const json = await res.json();
-      setSuggestions(json.predictions || []);
-    } catch (err) {
-      console.error('Error al buscar sugerencias', err);
-    }
-  };
-
-  const fetchCoordinates = async (placeId: string, name: string) => {
     setLoading(true);
     try {
-      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input)}&format=json&addressdetails=1&accept-language=es`;
       const res = await fetch(url);
       const json = await res.json();
-      const location = json.result.geometry.location;
-
-      onLocationSelected({ name, lat: location.lat, lng: location.lng });
-      setSuggestions([]);
-       // Extraer el nombre sin la ciudad
-      setQuery(name.split(',')[0]);
-
+      setSuggestions(json || []);
     } catch (err) {
-      console.error('Error al obtener detalles', err);
+      console.error('Error al buscar sugerencias', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSelectSuggestion = (item: any) => {
+    const name = item.display_name;
+    const lat = parseFloat(item.lat);
+    const lng = parseFloat(item.lon);
+
+    onLocationSelected({ name, lat, lng });
+    setSuggestions([]);
+    setQuery(name.split(',')[0]);
   };
 
 
   return (
     <View>
       <TextInput
-      className='mb-2'
+        className='mb-2'
         placeholder="Buscar lugar del evento"
         value={query}
         onChangeText={setQuery}
@@ -74,9 +63,9 @@ export default function PlaceSearch({ onLocationSelected }: { onLocationSelected
         <TouchableOpacity 
             className='py-2 px-3 bg-primary rounded-md mb-2'
             key={item.place_id || index} 
-            onPress={() => fetchCoordinates(item.place_id, item.description)} 
+            onPress={() => handleSelectSuggestion(item)} 
         >
-          <Text className='text-dark'>{item.description}</Text>
+          <Text className='text-dark'>{item.display_name}</Text>
         </TouchableOpacity>
       ))}
 

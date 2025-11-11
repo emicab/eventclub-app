@@ -144,6 +144,27 @@ export default function PostCard({ post }: PostCardProps) {
           {post.content}
         </Text>
 
+        {post.event && (
+          <TouchableOpacity 
+          //@ts-ignore
+            onPress={() => router.push(`/event/${post.event.id}`)} // Navegar al detalle del evento
+            className="bg-accent/10 p-3 rounded-lg border-l-4 border-accent mb-3"
+          >
+            <Text className="text-accent text-xs font-medium mb-1">
+              ➡ Ir al evento
+            </Text>
+            <Text className="text-primary text-base font-bold" numberOfLines={1}>
+              {post.event.title}
+            </Text>
+            <View className="flex-row items-center mt-1">
+              <Ionicons name="location-outline" size={14} color={Colors.text.secondary} />
+              <Text className="text-secondary text-sm ml-1" numberOfLines={1}>
+                {post.event.place}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* --- Imagen del Post (si existe) --- */}
         {/* --- Vista Previa de la Imagen (si existe) --- */}
         {post.imageUrls && post.imageUrls.length > 0 && (
