@@ -143,6 +143,7 @@ export default function EventDetailScreen() {
     const avatarUrl = event.company?.logoUrl;
     const phone = event.organizer?.profile?.phone;
 
+    console.log(event.tickets) // [{"currency": "ARS", "eventId": "cmhumxio70006u6ngvu5dawxo", "id": "cmhumxjcb0007u6ng4jacouoj", "name": "General", "priceInCents": 1000000, "quantity": 7}]
     return (
         <View className="flex-1 bg-background pt-6 my-safe">
             <Stack.Screen options={{ headerShown: false }} />
@@ -173,16 +174,18 @@ export default function EventDetailScreen() {
                             
                             return (
                                 <TouchableOpacity
+                                    disabled={ticket.quantity === 0}
                                     key={ticket.id}
                                     onPress={() => {
                                         setSelectedTicket(ticket);
                                         setQuantity(1);
                                     }}
-                                    className={`p-4 rounded-lg border-2 ${selectedTicket?.id === ticket.id ? 'border-accent bg-accent/10' : 'border-glass-border bg-card'}`}
+                                    className={`p-4 rounded-lg border-2 ${selectedTicket?.id === ticket.id ? 'border-accent bg-accent/10' : 'border-glass-border bg-card'} ${ticket.quantity === 0 ? 'opacity-50' : ''}`}
                                 >
                                     <View className="flex-row justify-between items-center">
                                         <Text className="text-accent font-bold flex-1">{ticket.name}</Text>
                                         {/* Muestra el precio formateado en ARS $... */}
+                                        <Text className='text-accent/50 mr-4 font-medium text-base'>Disponibles: {ticket.quantity}</Text>
                                         <Text className="text-accent font-bold">{formattedOriginalPrice}</Text>
                                     </View>
                                 </TouchableOpacity>
@@ -271,13 +274,14 @@ export default function EventDetailScreen() {
                     {/* Botón de Pago */}
                     <TouchableOpacity
                         onPress={handleConfirmPurchase}
-                        disabled={isPending}
+                        disabled={isPending || quantity < 1}
                         className="bg-accent px-8 py-4 rounded-full flex-row justify-between items-center"
                     >
                         { isPending ? <ActivityIndicator color={ Colors.background } /> : (
                             <>
                                 <Text className="text-background font-bold text-base">Pagar</Text>
                                 {/* ✅ CORRECCIÓN FINAL: Usar el valor y moneda originales para el total */}
+                            
                                 <Text className="text-background font-bold text-base">
                                     {formatOriginalPrice(totalOriginalPriceInCents, selectedTicket.currency)}
                                 </Text>
