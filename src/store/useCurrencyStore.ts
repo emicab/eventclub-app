@@ -9,6 +9,7 @@ type CurrencyState = {
   setRates: (rates: Record<string, number>) => void;
   setDisplayCurrency: (currency: string) => void;
   getRate: (currency: string) => number;
+  
 };
 
 // ---- STORE PRINCIPAL ----
@@ -34,6 +35,7 @@ export const useCurrencyStore = create(
     {
       name: 'currency-preferences-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      // @ts-ignore
       partialize: (state) => ({ displayCurrency: state.displayCurrency }), // Guardamos solo la moneda elegida
     }
   )
@@ -82,4 +84,23 @@ export const useCurrencyFormatter = () => {
   };
 
   return { formatPrice, displayCurrency };
+};
+
+// ---- HELPER: FORMATEADOR DE PRECIOS ORIGINALES ----
+export const useOriginalCurrencyFormatter = () => {
+  // Retorna una función para formatear el precio sin conversión
+  const formatOriginalPrice = (amountInCents: number, currency: string) => {
+      const amount = amountInCents / 100;
+      try {
+          // Usamos 'undefined' para la localización y que tome la del dispositivo
+          return new Intl.NumberFormat(undefined, {
+              style: 'currency',
+              currency: currency,
+              minimumFractionDigits: 2,
+          }).format(amount);
+      } catch {
+          return `${currency} ${amount.toFixed(2)}`;
+      }
+  };
+  return { formatOriginalPrice };
 };

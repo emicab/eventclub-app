@@ -87,8 +87,13 @@ export default function CreateEventScreen() {
     formData.append('description', description);
     formData.append('date', date.toISOString());
     formData.append('companyId', companyId);
-    // formData.append('latitude', latitude.toString());
-    // formData.append('longitude', longitude.toString());
+    
+    // ✅ CAMBIO 1: Descomentar y validar latitude y longitude
+    if (latitude !== null && longitude !== null) {
+        formData.append('latitude', latitude.toString());
+        formData.append('longitude', longitude.toString());
+    }
+
     formData.append('address', address);
     formData.append('place', place);
     formData.append('city', city);
@@ -182,7 +187,8 @@ export default function CreateEventScreen() {
               const countryName = parts[parts.length - 1]?.trim();
 
 
-              console.log(countryName)
+              // console.log(countryName) // ❌ REMOVER: Para producción
+              
 
               setLatitude(lat);
               setLongitude(lng);
@@ -195,7 +201,9 @@ export default function CreateEventScreen() {
               setEventCurrency(mappedCurrency);
             }}
           />
-          {currency && (
+          
+          {/* ✅ CAMBIO 2: Usar eventCurrency para la condición de visualización */}
+          {eventCurrency && (
             <View className="bg-glass rounded-lg p-4 mt-2">
             <Text className="text-dark font-semibold">Moneda del Evento (detectada):</Text>
             <Text className="text-primary text-lg">{eventCurrency}</Text>
@@ -205,7 +213,7 @@ export default function CreateEventScreen() {
           {/* --- SECCIÓN DE ENTRADAS --- */}
           <Text className="text-primary text-xl font-bold mt-4 mb-2">Tipos de Entrada</Text>
           {tickets.map((ticket, index) => (
-            <View key={index} className="bg-slate-600 p-2 rounded-lg gap-4">
+            <View key={`ticket-${index}`} className="bg-slate-600 p-2 rounded-lg gap-4"> {/* ✅ MEJORA 3: Añadir key único */}
               <TextInput className="bg-card text-dark p-4 rounded-md" placeholder="Nombre (ej: General)" value={ticket.name} onChangeText={(val) => handleTicketChange(index, 'name', val)} />
               <TextInput className="bg-card text-dark p-4 rounded-md" keyboardType="numeric" placeholder="Precio (ej: 25.50)" value={ticket.price} onChangeText={(val) => handleTicketChange(index, 'price', val)} />
               <TextInput className="bg-card text-dark p-4 rounded-md" keyboardType="numeric" placeholder="Cantidad disponible" value={ticket.quantity} onChangeText={(val) => handleTicketChange(index, 'quantity', val)} />

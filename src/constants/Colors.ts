@@ -12,7 +12,7 @@ const Colors = {
   like: '#E74C3C',
 
   // Color de acento principal. Usaremos un magenta vibrante que resalta sobre el vidrio.
-  accent: '#E040FB',
+  accent: '#00A0FF',
 
   // Colores para las superficies de "vidrio"
   glass: {

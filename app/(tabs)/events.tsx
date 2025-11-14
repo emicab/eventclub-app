@@ -45,7 +45,8 @@ export default function EventsScreen() {
       queryFn: fetchMyProfile,
     });
 
-const { selectedCurrency, setCurrency, rates } = useCurrencyStore();
+  //@ts-ignore 
+  const { selectedCurrency, rates } = useCurrencyStore();
     
 
   const { data: events, isLoading } = useQuery({
@@ -65,7 +66,7 @@ const { selectedCurrency, setCurrency, rates } = useCurrencyStore();
       <View className='px-6 mb-4 flex-row justify-between items-center'>
         <View>
           <Text className="text-primary text-3xl" style={{ fontFamily: 'Inter_700Bold' }}>Eventos</Text>
-          <Text className="text-secondary mt-1" style={{ fontFamily: 'Inter_400Regular' }}>subtitulo para los eventos</Text>
+          <Text className="text-secondary mt-1" style={{ fontFamily: 'Inter_400Regular' }}>Mirá todos los eventos que están disponibles</Text>
         </View>
         <TouchableOpacity onPress={() => setModalVisible(true)} className="mr-4">
           <Ionicons name="calendar-outline" size={24} color={Colors.accent} />
@@ -92,6 +93,7 @@ const { selectedCurrency, setCurrency, rates } = useCurrencyStore();
                   <EventListItem 
                     key={event.id} 
                     event={event}
+                    // @ts-ignore
                     displayCurrency={selectedCurrency}
                     exchangeRate={rates[selectedCurrency]}
                   />
