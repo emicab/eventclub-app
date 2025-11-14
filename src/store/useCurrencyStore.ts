@@ -9,6 +9,7 @@ type CurrencyState = {
   setRates: (rates: Record<string, number>) => void;
   setDisplayCurrency: (currency: string) => void;
   getRate: (currency: string) => number;
+  
 };
 
 // ---- STORE PRINCIPAL ----
@@ -34,6 +35,7 @@ export const useCurrencyStore = create(
     {
       name: 'currency-preferences-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      // @ts-ignore
       partialize: (state) => ({ displayCurrency: state.displayCurrency }), // Guardamos solo la moneda elegida
     }
   )

@@ -46,7 +46,7 @@ export default function EventListItem({ event }: Props) {
     return (
         <TouchableOpacity
             onPress={() => router.push(`/event/${event.id}`)}
-            className='flex-row items-start mb-4'
+            className='flex-row items-start bg-accent/10 p-4 rounded-lg border-l-4 border-accent mb-3'
         >
             <Image
                 source={{ uri: imageUrl }}
@@ -54,7 +54,7 @@ export default function EventListItem({ event }: Props) {
                 resizeMode='cover'
             />
             <View className='flex-1 ml-4'>
-                <Text className='text-primary font-bold text-lg' style={{ fontFamily: "Inter_700Bold" }}>{event.title}</Text>
+                <Text className='text-accent font-bold text-lg' style={{ fontFamily: "Inter_700Bold" }}>{event.title}</Text>
                 <Text className='text-secondary font-medium text-md mt-1'>{event.place}</Text>
                 <Text className='text-secondary text-sm mt-1'>{event.address}, {event.city}</Text>
                 <Text className='text-secondary text-sm mt-1'>
