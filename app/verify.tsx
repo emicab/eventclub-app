@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
-import { useRouter, useSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import apiClient from '../src/lib/axios';
 import Colors from '../src/constants/Colors';
@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 // Pantalla para verificar la cuenta mediante un código (6 dígitos)
 export default function VerifyCodeScreen() {
   const router = useRouter();
-  const { email } = useSearchParams() as { email?: string };
+  const { email } = useLocalSearchParams() as { email?: string };
 
   const [code, setCode] = useState('');
 
@@ -62,7 +62,7 @@ export default function VerifyCodeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background pt-10 px-6">
-      <View className="flex-1 justify-center">
+      <View className="flex-1 justify-center px-6">
         <View className="items-center mb-6">
           <Ionicons name="mail-open" size={64} color={Colors.accent} />
           <Text className="text-primary text-2xl font-bold mt-4">Verificación por código</Text>
@@ -77,15 +77,15 @@ export default function VerifyCodeScreen() {
             onChangeText={setCode}
             placeholder="Ingresa el código"
             placeholderTextColor={Colors.text.secondary}
-            keyboardType="numeric"
+            keyboardType="numbers-and-punctuation"
             maxLength={6}
-            className="bg-black/10 text-primary rounded-lg p-4 text-lg"
+            className="bg-black/10 text-primary rounded-lg p-4 text-lg border border-transparent focus:border-accent"
           />
 
           <TouchableOpacity
             onPress={handleSubmit}
             className="w-full bg-accent rounded-lg p-4 items-center mt-4"
-            disabled={verifying}
+            disabled={verifying || code.trim().length < 4}
           >
             {verifying ? (
               <ActivityIndicator color={Colors.background} />
