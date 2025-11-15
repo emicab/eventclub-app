@@ -1,4 +1,4 @@
-// En register.tsx
+// Pantalla de registro de usuarios
 
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView, Pressable, Alert, ImageBackground, StyleSheet } from 'react-native';
 import { Link, useRouter } from 'expo-router';
@@ -8,12 +8,15 @@ import apiClient from '../src/lib/axios';
 import { RegisterCredentials } from '../src/types';
 import Colors from '../src/constants/Colors';
 
-// --- INICIO DE LA MEJORA ---
+/* Inicio: validación y manejo del formulario de registro
+   - Usamos `react-hook-form` para el control del formulario
+   - Validación declarativa con `zod` y `@hookform/resolvers/zod`
+ */
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-// 1. Definimos el esquema de validación con Zod
+// 1) Esquema de validación con Zod (mensajes en español)
 const RegisterSchema = z.object({
   firstName: z.string({ error: 'El nombre es requerido' }).min(2, 'El nombre es muy corto'),
   lastName: z.string({ error: 'El apellido es requerido' }).min(2, 'El apellido es muy corto'),
@@ -22,9 +25,14 @@ const RegisterSchema = z.object({
 });
 
 type RegisterFormData = z.infer<typeof RegisterSchema>;
-// --- FIN DE LA MEJORA ---
+// Fin: esquema y tipos para validación del formulario
 
 
+/** 
+ Llamada al endpoint de registro.
+ Recibe las credenciales y delega en la instancia central de Axios.
+ Devuelve la respuesta del servidor (ej. creación de usuario / envío de e-mail).
+*/
 const registerUser = async (credentials: RegisterCredentials) => {
   const { data } = await apiClient.post('/api/auth/register', credentials);
   return data;
@@ -33,13 +41,13 @@ const registerUser = async (credentials: RegisterCredentials) => {
 export default function RegisterScreen() {
   const router = useRouter();
 
-  // --- INICIO DE LA MEJORA ---
-  // 2. Usamos el hook useForm, conectándolo con nuestro esquema de Zod
+  // Uso de `useForm` con `zodResolver` para validar antes del envío.
+  // `control` se conecta a cada campo vía `Controller` y `errors` contiene
+  // los mensajes validados por el esquema `RegisterSchema`.
   const { control, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: { firstName: '', lastName: '', email: '', password: '' }
   });
-  // --- FIN DE LA MEJORA ---
 
 
   const { mutate: register, isPending: isLoading } = useMutation({
@@ -48,10 +56,11 @@ export default function RegisterScreen() {
       Alert.alert('Registro Exitoso', 'Hemos enviado un enlace a tu correo para verificar tu cuenta.');
       router.replace('/login');
     },
-    // El error ahora se puede manejar aquí si quieres, o mostrarlo desde formState
+    // Los errores de la mutación (por ejemplo, 400/500) se pueden manejar
+    // con `onError` aquí o bien mostrarse junto a los campos usando `formState.errors`.
   });
   
-  // La función onSubmit ahora recibe los datos validados del formulario
+  // onSubmit recibe los datos ya validados por Zod y los envía al servidor
   const onSubmit = (data: RegisterFormData) => {
     register(data);
   };
@@ -68,8 +77,6 @@ export default function RegisterScreen() {
           <View className="w-full rounded-2xl overflow-hidden">
             <BlurView intensity={90} tint="dark" style={styles.blurContainer} className="p-6">
               <Text className="text-primary text-3xl text-center font-bold mb-6">Crear Cuenta</Text>
-
-              {/* --- INICIO DE LA MEJORA --- */}
               <View className='flex-row gap-2 items-start'>
                 <View className="flex-1">
                   <Controller control={control} name="firstName" render={({ field: { onChange, onBlur, value } }) => (
@@ -112,7 +119,10 @@ export default function RegisterScreen() {
               )} />
               {errors.password && <Text className="text-error mt-1 ml-2 mb-2">{errors.password.message}</Text>}
 
-              {/* El botón ahora llama a handleSubmit, que valida antes de llamar a onSubmit */}
+                {/* El botón llama a `handleSubmit(onSubmit)`:
+                  - valida el formulario con Zod
+                  - solo si es válido invoca `onSubmit`
+                */}
               <TouchableOpacity
                 className="w-full bg-accent rounded-lg p-4 items-center"
                 onPress={handleSubmit(onSubmit)}
@@ -120,8 +130,6 @@ export default function RegisterScreen() {
               >
                 {isLoading ? <ActivityIndicator color={Colors.background} /> : <Text className="text-background text-base font-bold">Registrarse</Text>}
               </TouchableOpacity>
-              {/* --- FIN DE LA MEJORA --- */}
-
             </BlurView>
           </View>
 
