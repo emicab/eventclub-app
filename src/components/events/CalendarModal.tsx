@@ -1,4 +1,4 @@
-import { Modal, View, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Modal, View, TouchableOpacity, SafeAreaView, Text } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/src/constants/Colors';
@@ -15,10 +15,11 @@ LocaleConfig.defaultLocale = 'es';
 type CalendarModalProps = {
   visible: boolean;
   onClose: () => void;
-  onSelectDate: (date: string) => void;
+  onSelectDate: (date?: string) => void;
+  selectedDate?: string;
 };
 
-export default function CalendarModal({ visible, onClose, onSelectDate }: CalendarModalProps) {
+export default function CalendarModal({ visible, onClose, onSelectDate, selectedDate }: CalendarModalProps) {
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
       <SafeAreaView className="flex-1 bg-background pt-12">
@@ -26,12 +27,24 @@ export default function CalendarModal({ visible, onClose, onSelectDate }: Calend
           <TouchableOpacity onPress={onClose}>
             <Ionicons name="close" size={28} color={Colors.text.primary} />
           </TouchableOpacity>
+          {selectedDate && (
+            <TouchableOpacity
+              onPress={() => {
+                onSelectDate(undefined);
+                onClose();
+              }}
+              className="mr-2"
+            >
+              <Text className="text-accent" style={{ fontFamily: 'Inter_700Bold' }}>Limpiar</Text>
+            </TouchableOpacity>
+          )}
         </View>
         <Calendar
           onDayPress={(day) => {
             onSelectDate(day.dateString);
             onClose();
           }}
+          markedDates={selectedDate ? { [selectedDate]: { selected: true, selectedColor: Colors.accent } } : {}}
           theme={{
             backgroundColor: Colors.background,
             calendarBackground: Colors.background,

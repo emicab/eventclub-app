@@ -12,10 +12,26 @@ import { useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 
 
+const formatLocalDate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const parseLocalDate = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 const fetchEvents = async (date?: string): Promise<Event[]> => {
-  const dateFilter = date ? `?date=${date}` : '';
-  const { data } = await apiClient.get(`/api/events${dateFilter}`);
-  return data;
+  const { data } = await apiClient.get(`/api/events`);
+  if (!date) return data;
+  // Filtrado en cliente por la fecha local para evitar problemas de zona horaria
+  return data.filter((event: Event) => {
+    const evDate = new Date(event.date);
+    return formatLocalDate(evDate) === date;
+  });
 };
 
 // Función para agrupar eventos por día
@@ -61,22 +77,40 @@ export default function EventsScreen() {
     data: groupedEvents[date],
   }));
 
+  const selectedDateLabel = selectedDate
+    ? parseLocalDate(selectedDate).toLocaleDateString('es-ES', { weekday: 'long', month: 'long', day: 'numeric' })
+    : undefined;
+
   return (
     <SafeAreaView className="flex-1 bg-background pt-10 mt-safe">
       <View className='px-6 mb-4 flex-row justify-between items-center'>
         <View>
           <Text className="text-primary text-3xl" style={{ fontFamily: 'Inter_700Bold' }}>Eventos</Text>
-          <Text className="text-secondary mt-1" style={{ fontFamily: 'Inter_400Regular' }}>Mirá todos los eventos que están disponibles</Text>
+          <Text className="text-secondary mt-1" style={{ fontFamily: 'Inter_400Regular' }}>Mirá todos los eventos{'\n'}que están disponibles</Text>
+          {selectedDateLabel && (
+            <View className='my-4'>
+              <Text className="text-secondary text-base font-medium" style={{ fontFamily: 'Inter_400Regular' }}>Fecha seleccionada</Text>
+              <Text className="text-secondary text-base font-bold" style={{ fontFamily: 'Inter_700Bold' }}>{selectedDateLabel}</Text>
+            </View>
+          )}
         </View>
-        <TouchableOpacity onPress={() => setModalVisible(true)} className="mr-4">
-          <Ionicons name="calendar-outline" size={24} color={Colors.accent} />
-        </TouchableOpacity>
+        <View className="flex-row items-center">
+          {selectedDate && (
+            <TouchableOpacity onPress={() => setSelectedDate(undefined)} className="mr-3">
+              <Ionicons name="close-circle-outline" size={24} color={Colors.accent} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => setModalVisible(true)} className="mr-4">
+            <Ionicons name="calendar-outline" size={24} color={Colors.accent} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <CalendarModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSelectDate={setSelectedDate}
+        selectedDate={selectedDate}
       />
 
       {isLoading ? (
