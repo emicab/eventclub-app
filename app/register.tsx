@@ -52,9 +52,12 @@ export default function RegisterScreen() {
 
   const { mutate: register, isPending: isLoading } = useMutation({
     mutationFn: registerUser,
-    onSuccess: () => {
-      Alert.alert('Registro Exitoso', 'Hemos enviado un enlace a tu correo para verificar tu cuenta.');
-      router.replace('/login');
+    onSuccess: (_data, variables) => {
+      // `variables` son los datos que pasamos a `register` (el formulario)
+      const email = (variables as RegisterFormData).email;
+      Alert.alert('Registro Exitoso', 'Hemos enviado un código a tu correo para verificar tu cuenta.');
+      // Redirigimos al flujo de verificación dentro de la app pasando el email
+      router.replace(`/verify?email=${encodeURIComponent(email)}`);
     },
     // Los errores de la mutación (por ejemplo, 400/500) se pueden manejar
     // con `onError` aquí o bien mostrarse junto a los campos usando `formState.errors`.
